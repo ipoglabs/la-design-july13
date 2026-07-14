@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
-import ListingModel from "@/lib/models/Listing";
+import ListingModel from "@/lib/db/models/Listing";
 import {
   COUNTRY_CONFIGS,
   getAppStage,

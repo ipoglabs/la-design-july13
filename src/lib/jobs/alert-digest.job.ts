@@ -15,7 +15,7 @@
 
 import dbConnect from "@/lib/db";
 import Alert from "@/lib/models/Alert";
-import Listing from "@/lib/models/Listing";
+import Listing from "@/lib/db/models/Listing";
 import { sendEmail } from "@/lib/email";
 import type { JobResult } from "@/lib/jobs/_types";
 import { escapeRegex } from "@/lib/jobs/_utils";
