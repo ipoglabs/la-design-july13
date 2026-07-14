@@ -98,9 +98,6 @@ export default async function RootLayout({
   const reqHeaders = await headers();
   const isBareLayout   = reqHeaders.get("x-bare-layout")   === "1";
   const isSimpleLayout = reqHeaders.get("x-simple-layout") === "1";
-  // POC: landing page always shows guest header for demo purposes.
-  // TODO [AUTH — BEFORE PRODUCTION]: Remove isGuestDemo + the user override below.
-  const isGuestDemo    = reqHeaders.get("x-guest-demo")    === "1";
 
   // Bare routes (/unsupported) skip the full app shell entirely.
   // No country detection, no header/footer — just the page content.
@@ -126,7 +123,7 @@ export default async function RootLayout({
   const countryEntry = allowed ? getConfigByIso(raw) : null;
   const countryCode  = countryEntry?.code ?? "in";
   const countryLabel = countryEntry?.config.displayName ?? "";
-  const user = isGuestDemo ? null : await getSession();
+  const user = await getSession();
 
   // Footer nav content — resolved per the active country, not hardcoded.
   const popularCategories = getPopularCategories(countryCode);
@@ -153,7 +150,7 @@ export default async function RootLayout({
                   topLocations={topLocations}
                 />
               </div>
-              
+
               <Toaster />
             </CountryProvider>
           ) : blockedCode ? (

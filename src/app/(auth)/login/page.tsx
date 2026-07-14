@@ -220,6 +220,11 @@ function LoginForm() {
       } else {
         router.push("/");
       }
+
+      // 🔄 Force the root layout (Server Component) to re-run getSession()
+      // so AppHeader picks up the freshly-set session cookie immediately —
+      // router.push() alone does NOT re-render Server Components above this page.
+      router.refresh();
     } catch (err: any) {
       const message = err?.message || "Something went wrong";
 

@@ -51,7 +51,7 @@ import {
   DrawerContent,
 } from "@/components/ui/drawer";
 import { OverlayCountrySelect } from "@/components/overlay-country-select";
-
+import { useAuthStore } from "@/store/authStore";
 /* ─── menu config ────────────────────────────────────────────── */
 const NAV_ITEMS = [
   { label: "My Ads",           icon: LayoutGrid,    href: "/myads" },
@@ -185,13 +185,13 @@ function MenuBody({
       <div className="border-t border-slate-100 py-1">
         <button
           type="button"
-          onClick={() => {
-            // TODO: call signOut from your auth provider before closing:
-            //   NextAuth v5:   signOut()  (from "next-auth/react")
-            //   Lucia:         POST /api/auth/logout then router.refresh()
-            //   better-auth:   authClient.signOut()
-            onClose();
-          }}
+          onClick={async () => {
+  onClose();
+  await fetch("/api/auth/logout", { method: "POST" });
+  useAuthStore.getState().logout();
+  router.push("/");
+  router.refresh();
+}}
           className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-rose-600 hover:bg-rose-50 transition-colors"
         >
           <LogOut aria-hidden="true" className="size-4 shrink-0" />
