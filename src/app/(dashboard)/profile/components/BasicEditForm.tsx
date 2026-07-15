@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { updateProfile } from "@/app/actions/updateProfile";
 import { basicProfileSchema } from "@/validators/profileBasic";
-import { useAutoScrollInput } from "@/hooks/useAutoScrollInput";
+import { useAutoScrollInput } from "@/lib/hooks/useAutoScrollInput";
 
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import { FormField } from "@/components/FormField";
 import { FormFieldWrapper } from "@/components/FormFieldWrapper";
 import { FormHelperText } from "@/components/FormHelperText";
 import { DateInput } from "@/components/date-input";
-import { useMediaQuery } from "@/components/hooks/use-media-query";
+import { useMediaQuery } from "@/lib/hooks/use-media-query";
 
 import type { ProfileUser } from "../types";
 

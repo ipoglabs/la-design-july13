@@ -42,5 +42,6 @@ export default async function dbConnect(): Promise<typeof mongoose> {
   }
 
   cached.conn = await cached.promise;
+  console.log("Connected DB:", cached.conn.connection.db?.databaseName);
   return cached.conn;
 }
