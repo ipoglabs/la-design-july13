@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import ProfileListingCard from "./ProfileListingCard";
 import MessageResponsiveDialog from "../components/responsive-dialog/MessageDrawer";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useMediaQuery } from "@/lib/hooks/use-media-query";
 
 export default function PublicProfile({ user }: any) {
   const [openMessage, setOpenMessage] = useState(false);

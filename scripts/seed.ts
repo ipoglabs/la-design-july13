@@ -1,10 +1,15 @@
 // scripts/seed.ts
-// Run with: npx tsx scripts/seed.ts   (or: npx ts-node scripts/seed.ts)
+// Run with: npx tsx --env-file=.env.local scripts/seed.ts
 // Requires MONGODB_URI in your environment, pointing at lokalads-staging.
+//
+// Adjust the two import paths below if your real files live somewhere
+// other than src/lib/db.ts and src/models/user.ts.
 
-import dbConnect from "../src/lib/db/dbConnect";
-import User from "../src/lib/db/models/User";
+import dbConnect from "../src/lib/db";
+import User from "../src/models/user";
 import Listing from "../src/lib/db/models/Listing";
+import { hash } from "bcryptjs";
+
 async function seed() {
   await dbConnect();
 
@@ -14,58 +19,76 @@ async function seed() {
 
   console.log("Creating dummy users...");
 
+  // Your real User model has no pre-save hashing hook, so we hash here,
+  // before insert — the login route's bcryptjs.compare() needs a real
+  // bcrypt hash in `password`, not plain text.
+  const hashedPassword = await hash("password123", 10);
+
   const dave = await User.create({
-    name: "Dave Morris",
+    userId: "000000000001",
+    fullName: "Dave Morris",
+    dateOfBirth: new Date("1985-04-12"),
+    gender: "male",
+    locality: "East London",
     email: "dave.morris@example.com",
-    passwordHash: "not-a-real-hash-placeholder",
-    role: "Private Seller",
-    location: "East London",
-    tagline: "Selling my well-maintained family car",
-    avatar: "/img/img1.jpg",
-    verified: false,
-    memberSince: new Date("2022-03-01"),
-    lastActiveAt: new Date(),
-    activeListingsCount: 1,
-    likesCount: 42,
-    followersCount: 18,
+    isEmailVerified: true,
+    primaryNumber: "+447700900001",
+    isPrimaryNumberVerified: true,
+    password: hashedPassword,
+    role: "individual", // guessed — confirm against your real role enum
+    provider: "credentials",
+    accountStatus: "Active",
+    isNewUser: false,
+    isTermsAndConditionAccepted: true,
+    isPrivacyAndPolicyAccepted: true,
+    isCookiesPolicyAccepted: true,
+    marketingOptIn: false,
   });
 
   const apex = await User.create({
-    name: "Apex Car Sales",
+    userId: "000000000002",
+    fullName: "Apex Car Sales",
+    dateOfBirth: new Date("1990-01-01"), // required by schema even for a business account — placeholder
+    locality: "Croydon, London",
     email: "sales@apexcars.example.com",
-    passwordHash: "not-a-real-hash-placeholder",
-    role: "Car Dealer",
-    location: "Croydon, London",
-    tagline: "Trusted dealer, 500+ cars sold since 2015",
-    avatar: "/img/img2.jpg",
-    verified: true,
-    memberSince: new Date("2015-06-01"),
-    lastActiveAt: new Date(),
-    activeListingsCount: 34,
-    likesCount: 5200,
-    followersCount: 2100,
+    isEmailVerified: true,
+    primaryNumber: "+447700900002",
+    isPrimaryNumberVerified: true,
+    password: hashedPassword,
+    role: "agency", // matches the real example document you shared
+    provider: "credentials",
+    accountStatus: "Active",
+    isNewUser: false,
+    isTermsAndConditionAccepted: true,
+    isPrivacyAndPolicyAccepted: true,
+    isCookiesPolicyAccepted: true,
+    marketingOptIn: true,
   });
 
   const alice = await User.create({
-    name: "Alice Chen",
+    userId: "000000000003",
+    fullName: "Alice Chen",
+    dateOfBirth: new Date("1990-09-03"),
+    gender: "female",
+    locality: "Canary Wharf, London",
     email: "alice.chen@example.com",
-    passwordHash: "not-a-real-hash-placeholder",
-    role: "Private Landlord",
-    location: "Canary Wharf, London",
-    tagline: "Renting out my second property",
-    avatar: "/img/img3.jpg",
-    verified: false,
-    memberSince: new Date("2021-01-15"),
-    lastActiveAt: new Date(),
-    activeListingsCount: 2,
-    likesCount: 95,
-    followersCount: 40,
+    isEmailVerified: true,
+    primaryNumber: "+447700900003",
+    isPrimaryNumberVerified: false,
+    password: hashedPassword,
+    role: "individual",
+    provider: "credentials",
+    accountStatus: "Active",
+    isNewUser: false,
+    isTermsAndConditionAccepted: true,
+    isPrivacyAndPolicyAccepted: true,
+    isCookiesPolicyAccepted: true,
+    marketingOptIn: false,
   });
 
   console.log("Creating dummy listings...");
 
   await Listing.create([
-    // --- Vehicles: cars, 3-scenario coverage ---
     {
       country: "gb",
       category: "vehicles",
@@ -99,11 +122,12 @@ async function seed() {
       coordinates: { lat: 51.5416, lng: -0.0553 },
       seller: {
         userId: dave._id,
-        name: dave.name,
+        fullName: dave.fullName,
         role: dave.role,
-        location: dave.location,
-        avatar: dave.avatar,
-        verified: dave.verified,
+        locality: dave.locality,
+        image: dave.image,
+        isEmailVerified: dave.isEmailVerified,
+        isPrimaryNumberVerified: dave.isPrimaryNumberVerified,
       },
     },
     {
@@ -139,14 +163,14 @@ async function seed() {
       coordinates: { lat: 51.3762, lng: -0.0982 },
       seller: {
         userId: apex._id,
-        name: apex.name,
+        fullName: apex.fullName,
         role: apex.role,
-        location: apex.location,
-        avatar: apex.avatar,
-        verified: apex.verified,
+        locality: apex.locality,
+        image: apex.image,
+        isEmailVerified: apex.isEmailVerified,
+        isPrimaryNumberVerified: apex.isPrimaryNumberVerified,
       },
     },
-    // --- Property: to_rent ---
     {
       country: "gb",
       category: "property",
@@ -181,11 +205,12 @@ async function seed() {
       coordinates: { lat: 51.5054, lng: -0.0235 },
       seller: {
         userId: alice._id,
-        name: alice.name,
+        fullName: alice.fullName,
         role: alice.role,
-        location: alice.location,
-        avatar: alice.avatar,
-        verified: alice.verified,
+        locality: alice.locality,
+        image: alice.image,
+        isEmailVerified: alice.isEmailVerified,
+        isPrimaryNumberVerified: alice.isPrimaryNumberVerified,
       },
     },
   ]);

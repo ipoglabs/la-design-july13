@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import { useMediaQuery } from "@/hooks/use-media-query";
+import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import { X } from "lucide-react";
 
 import {

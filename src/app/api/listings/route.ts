@@ -4,7 +4,7 @@
 // uses the Mongoose models normally.
 
 import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/db/dbConnect"; // adjust path to wherever you place dbConnect.ts
+import dbConnect from "@/lib/db"; // your real connection helper
 import Listing from "@/lib/db/models/Listing";
 import { Country, Category } from "@/lib/db/models/constants";
 

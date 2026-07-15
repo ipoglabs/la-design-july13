@@ -20,14 +20,10 @@ import {
  */
 export interface ISellerSnapshot {
   userId: Types.ObjectId;
-  name: string; // computed as `${firstName} ${lastName}` at write time
+  fullName: string; // matches real user.ts's `fullName` field directly
   role: string;
   locality?: string;
-  // NOTE: real User docs have no avatar/cover image field and no single
-  // boolean "verified" flag — closest equivalents are isEmailVerified /
-  // isPrimaryNumberVerified. If the UI needs a seller photo, that likely
-  // lives in a separate profile/agency collection; flag it and I'll model
-  // that once you share an example document.
+  image?: string; // matches real user.ts's `image` field (avatar)
   isEmailVerified: boolean;
   isPrimaryNumberVerified: boolean;
 }
@@ -35,9 +31,14 @@ export interface ISellerSnapshot {
 const SellerSnapshotSchema = new Schema<ISellerSnapshot>(
   {
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    name: { type: String, required: true },
-    role: { type: String, required: true },
+    fullName: { type: String, required: true },
+    role: {
+      type: String,
+      required: true,
+      enum: ["individual", "business", "agency", "other"], // confirmed from registration validation.ts
+    },
     locality: { type: String },
+    image: { type: String },
     isEmailVerified: { type: Boolean, default: false },
     isPrimaryNumberVerified: { type: Boolean, default: false },
   },
