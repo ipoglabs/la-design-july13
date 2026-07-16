@@ -9,7 +9,8 @@ import { toast } from "sonner";
 
 export default function PetWantedForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const store    = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);
@@ -24,7 +25,7 @@ export default function PetWantedForm() {
   const agePreference    = (store as any).agePreference ?? "";
   const genderPreference = (store as any).genderPreference ?? "";
   const sizePreference   = (store as any).sizePreference ?? "";
-  const price            = (store as any).price ?? (store as any).budget ?? store.salePrice ?? "";
+  const price            = (store as any).price ?? (store as any).budget ?? (store as any).salePrice ?? "";
   const preferredLocations = (store as any).preferred_locations ?? [];
   const location         = store.location ?? {};
   const sellerInfo       = store.sellerInfo ?? {};

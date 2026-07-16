@@ -12,7 +12,8 @@ import { useCountryConfig } from "@/lib/hooks/useCountryConfig";
 
 export default function BuyForm() {
   const config   = usePropertyConfig();
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
   const setField = usePostFormStore((s) => s.setField);
 
   const name        = usePostFormStore((s) => s.name) ?? "";

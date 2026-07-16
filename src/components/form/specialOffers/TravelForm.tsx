@@ -15,22 +15,22 @@ export default function TravelTourismForm() {
   const category = store.category;
   const subcategory = store.subcategory;
 
-  const tourTitle = store.tourTitle ?? "";
-  const tourType = store.tourType ?? "";
+  const tourTitle = (store as any).tourTitle ?? "";
+  const tourType = (store as any).tourType ?? "";
   const description = store.description ?? "";
-  const startDate = store.startDate ?? "";
-  const endDate = store.endDate ?? "";
-  const duration = store.duration ?? "";
-  const itinerary = store.itinerary ?? "";
-  const inclusions = store.inclusions ?? "";
-  const exclusions = store.exclusions ?? "";
-  const accommodation = store.accommodation ?? "";
-  const transport = store.transport ?? "";
-  const groupSize = store.groupSize ?? "";
-  const bookingDeadline = store.bookingDeadline ?? "";
-  const price = store.price ?? store.salePrice ?? "";
-  const specialOffers = store.specialOffers ?? "";
-  const cancellationPolicy = store.cancellationPolicy ?? "";
+  const startDate = (store as any).startDate ?? "";
+  const endDate = (store as any).endDate ?? "";
+  const duration = (store as any).duration ?? "";
+  const itinerary = (store as any).itinerary ?? "";
+  const inclusions = (store as any).inclusions ?? "";
+  const exclusions = (store as any).exclusions ?? "";
+  const accommodation = (store as any).accommodation ?? "";
+  const transport = (store as any).transport ?? "";
+  const groupSize = (store as any).groupSize ?? "";
+  const bookingDeadline = (store as any).bookingDeadline ?? "";
+  const price = (store as any).price ?? (store as any).salePrice ?? "";
+  const specialOffers = (store as any).specialOffers ?? "";
+  const cancellationPolicy = (store as any).cancellationPolicy ?? "";
   const sellerInfo = store.sellerInfo ?? {};
 
   const [errors, setErrors] = useState<Record<string, string>>({});

@@ -26,7 +26,8 @@ const PET_TYPES = [
 
 export default function PetServiceForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const store    = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);
@@ -41,7 +42,7 @@ export default function PetServiceForm() {
   const experience          = (store as any).experience ?? "";
   const availability        = (store as any).availability ?? "";
   const serviceProviderName = (store as any).serviceProviderName ?? "";
-  const price               = (store as any).price ?? store.salePrice ?? "";
+  const price               = (store as any).price ?? (store as any).salePrice ?? "";
   const location            = store.location ?? {};
   const sellerInfo          = store.sellerInfo ?? {};
 

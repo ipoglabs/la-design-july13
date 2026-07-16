@@ -9,7 +9,8 @@ import { toast } from "sonner";
 
 export default function OfficeSuppliesForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const store = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);
@@ -26,7 +27,7 @@ export default function OfficeSuppliesForm() {
   const color = (store as any).color ?? "";
   const material = (store as any).material ?? "";
   const features = (store as any).features ?? "";
-  const price = (store as any).price ?? store.salePrice ?? "";
+  const price = (store as any).price ?? (store as any).salePrice ?? "";
   const negotiable = (store as any).negotiable ?? "";
   const businessType = (store as any).businessType ?? "";
   const description = store.description ?? "";

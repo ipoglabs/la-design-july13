@@ -9,7 +9,8 @@ import { toast } from "sonner";
 
 export default function TechnologyServiceForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const store = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);

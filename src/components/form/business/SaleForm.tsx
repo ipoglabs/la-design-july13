@@ -10,7 +10,8 @@ import { useCountryConfig } from "@/lib/hooks/useCountryConfig";
 export default function BusinessSaleLeaseForm() {
   const store = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
   const ownership = (store as any).ownership ?? "";
 
   /* ---------------- DEFAULT CATEGORY ---------------- */

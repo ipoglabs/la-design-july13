@@ -24,7 +24,8 @@ const CONDITIONS = [
 
 export default function PetAccessoriesForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const store    = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);
@@ -38,7 +39,7 @@ export default function PetAccessoriesForm() {
   const partsCategory = (store as any).partsCategory ?? "";
   const brand         = (store as any).brand ?? "";
   const condition     = (store as any).condition ?? "";
-  const price         = (store as any).price ?? store.salePrice ?? "";
+  const price         = (store as any).price ?? (store as any).salePrice ?? "";
   const description   = store.description ?? "";
   const location      = store.location ?? {};
   const sellerInfo    = store.sellerInfo ?? {};

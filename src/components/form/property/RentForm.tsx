@@ -18,7 +18,8 @@ function cx(...parts: Array<string | false | null | undefined>) {
 export default function RentPropertyForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
   const config  = usePropertyConfig();
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const setField = usePostFormStore((s) => s.setField);
 

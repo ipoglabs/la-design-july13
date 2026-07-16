@@ -10,7 +10,8 @@ import { useCountryConfig } from "@/lib/hooks/useCountryConfig";
 export default function WantedForm() {
   const store = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
   const urgency = (store as any).urgency ?? "";
 
   /* ---------------- DEFAULT CATEGORY ---------------- */

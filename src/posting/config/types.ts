@@ -6,3 +6,7 @@ export type FieldSpec = {
   required?: boolean;
   unit?: string;
 };
+
+// Maps a category name (e.g. "property", "job") to its subcategory field
+// definitions (e.g. "to buy" -> FieldSpec[], "to rent" -> FieldSpec[]).
+export type CategoryConfig = Record<string, Record<string, FieldSpec[]>>;

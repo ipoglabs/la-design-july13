@@ -22,7 +22,8 @@ const SKILL_OPTIONS = [
 export default function JobFulltimeForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
   const config  = useJobConfig();
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const setField = usePostFormStore((s) => s.setField);
 

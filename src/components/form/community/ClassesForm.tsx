@@ -10,7 +10,8 @@ import { useCountryConfig } from "@/lib/hooks/useCountryConfig";
 export default function ClassesForm() {
   const store = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
   const level = (store as any).level ?? "";
   const mode = (store as any).mode ?? "";
 

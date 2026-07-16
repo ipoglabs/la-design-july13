@@ -9,7 +9,8 @@ import { toast } from "sonner";
 
 export default function ToysGamesForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const store = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);
@@ -22,7 +23,7 @@ export default function ToysGamesForm() {
   const brand = (store as any).brand ?? "";
   const ageGroup = (store as any).ageGroup ?? "";
   const material = (store as any).material ?? "";
-  const price = (store as any).price ?? store.salePrice ?? "";
+  const price = (store as any).price ?? (store as any).salePrice ?? "";
   const description = store.description ?? "";
   const location = store.location ?? {};
   const sellerInfo = store.sellerInfo ?? {};

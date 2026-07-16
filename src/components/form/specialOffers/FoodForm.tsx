@@ -16,15 +16,15 @@ export default function FoodDiningForm() {
   const subcategory = store.subcategory;
 
   const name = store.name ?? "";
-  const foodCategory = store.foodCategory ?? "";
+  const foodCategory = (store as any).foodCategory ?? "";
   const description = store.description ?? "";
-  const priceRange = store.priceRange ?? "";
-  const cuisineType = store.cuisineType ?? "";
-  const openingHours = store.openingHours ?? "";
-  const deliveryOption = store.deliveryOption ?? "";
-  const website = store.website ?? "";
-  const menuLink = store.menuLink ?? "";
-  const averageRating = store.averageRating ?? "";
+  const priceRange = (store as any).priceRange ?? "";
+  const cuisineType = (store as any).cuisineType ?? "";
+  const openingHours = (store as any).openingHours ?? "";
+  const deliveryOption = (store as any).deliveryOption ?? "";
+  const website = (store as any).website ?? "";
+  const menuLink = (store as any).menuLink ?? "";
+  const averageRating = (store as any).averageRating ?? "";
   const location = store.location ?? {};
   const sellerInfo = store.sellerInfo ?? {};
 

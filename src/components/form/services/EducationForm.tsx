@@ -9,7 +9,8 @@ import { toast } from "sonner";
 
 export default function EducationForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
   const setField = usePostFormStore((s) => s.setField);
 
   const store = usePostFormStore();

@@ -11,7 +11,8 @@ const SHIFT_OPTIONS = ["Morning", "Evening", "Night", "Weekend", "Rotational"];
 
 export default function JobPartTimeForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const setField = usePostFormStore((s) => s.setField);
 

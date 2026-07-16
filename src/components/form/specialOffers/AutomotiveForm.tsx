@@ -9,7 +9,8 @@ import { toast } from "sonner";
 
 export default function AutomotiveForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const store = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);
@@ -17,20 +18,20 @@ export default function AutomotiveForm() {
   const category = store.category;
   const subcategory = store.subcategory;
 
-  const make = store.make ?? "";
-  const model = store.model ?? "";
-  const year = store.year ?? "";
-  const condition = store.condition ?? "";
-  const kms = store.kms ?? "";
-  const fuelType = store.fuelType ?? "";
-  const transmission = store.transmission ?? "";
-  const bodyType = store.bodyType ?? "";
-  const color = store.color ?? "";
-  const ownerType = store.ownerType ?? "";
-  const registrationNumber = store.registrationNumber ?? "";
-  const insuranceValidTill = store.insuranceValidTill ?? "";
-  const serviceHistory = store.serviceHistory ?? "";
-  const price = store.salePrice ?? store.price ?? "";
+  const make = (store as any).make ?? "";
+  const model = (store as any).model ?? "";
+  const year = (store as any).year ?? "";
+  const condition = (store as any).condition ?? "";
+  const kms = (store as any).kms ?? "";
+  const fuelType = (store as any).fuelType ?? "";
+  const transmission = (store as any).transmission ?? "";
+  const bodyType = (store as any).bodyType ?? "";
+  const color = (store as any).color ?? "";
+  const ownerType = (store as any).ownerType ?? "";
+  const registrationNumber = (store as any).registrationNumber ?? "";
+  const insuranceValidTill = (store as any).insuranceValidTill ?? "";
+  const serviceHistory = (store as any).serviceHistory ?? "";
+  const price = (store as any).salePrice ?? (store as any).price ?? "";
   const description = store.description ?? "";
 
   const location = store.location ?? {};

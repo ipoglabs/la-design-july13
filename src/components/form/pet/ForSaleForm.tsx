@@ -33,7 +33,8 @@ const SUBCATEGORY_OPTIONS = [
 
 export default function PetsForSaleForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const setField   = usePostFormStore((s) => s.setField);
   const subcategory = usePostFormStore((s) => s.subcategory);
@@ -45,7 +46,7 @@ export default function PetsForSaleForm() {
   const gender     = usePostFormStore((s) => (s as any).gender) ?? "";
   const size       = usePostFormStore((s) => (s as any).size) ?? "";
   const vaccination = usePostFormStore((s) => (s as any).vaccination) ?? "";
-  const salePrice  = usePostFormStore((s) => s.salePrice) ?? "";
+  const salePrice  = usePostFormStore((s) => (s as any).salePrice) ?? "";
   const location   = usePostFormStore((s) => s.location);
   const sellerInfo = usePostFormStore((s) => s.sellerInfo);
 

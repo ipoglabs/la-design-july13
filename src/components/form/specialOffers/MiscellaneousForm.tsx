@@ -16,15 +16,15 @@ export default function MiscellaneousForm() {
   const subcategory = store.subcategory;
 
   const name = store.name ?? "";
-  const condition = store.condition ?? "";
-  const brand = store.brand ?? "";
-  const model = store.model ?? "";
-  const usageDuration = store.usageDuration ?? "";
-  const age = store.age ?? "";
-  const exchangeOption = store.exchangeOption ?? "";
-  const price = store.price ?? store.salePrice ?? "";
-  const deliveryOption = store.deliveryOption ?? "";
-  const mediaUrl = store.mediaUrl ?? "";
+  const condition = (store as any).condition ?? "";
+  const brand = (store as any).brand ?? "";
+  const model = (store as any).model ?? "";
+  const usageDuration = (store as any).usageDuration ?? "";
+  const age = (store as any).age ?? "";
+  const exchangeOption = (store as any).exchangeOption ?? "";
+  const price = (store as any).price ?? (store as any).salePrice ?? "";
+  const deliveryOption = (store as any).deliveryOption ?? "";
+  const mediaUrl = (store as any).mediaUrl ?? "";
   const description = store.description ?? "";
 
   const location = store.location ?? {};

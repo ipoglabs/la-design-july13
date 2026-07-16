@@ -11,7 +11,8 @@ import { toast } from "sonner";
 export default function VehicleWantedForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
   const config  = useVehicleConfig();
-  const { currency, locationPlaceholder } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const setField = usePostFormStore((s) => s.setField);
 
@@ -127,7 +128,7 @@ export default function VehicleWantedForm() {
         <label className="text-sm font-medium">Preferred Locations (comma-separated)</label>
         <input
           className="border rounded w-full py-2 px-3"
-          placeholder={locationPlaceholder}
+          placeholder="Enter preferred location"
           value={locText}
           onChange={(e) => setLocText(e.target.value)}
           onBlur={commitLocations}

@@ -9,7 +9,8 @@ import { toast } from "sonner";
 
 export default function EntertainmentForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const store = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);
@@ -18,16 +19,16 @@ export default function EntertainmentForm() {
   const subcategory = store.subcategory;
 
   const name = store.name ?? "";
-  const organizerName = store.organizerName ?? "";
-  const eventType = store.eventType ?? "";
-  const eventDate = store.eventDate ?? "";
-  const startTime = store.startTime ?? "";
-  const endTime = store.endTime ?? "";
-  const ageRestriction = store.ageRestriction ?? "";
-  const website = store.website ?? "";
-  const socialMedia = store.socialMedia ?? "";
+  const organizerName = (store as any).organizerName ?? "";
+  const eventType = (store as any).eventType ?? "";
+  const eventDate = (store as any).eventDate ?? "";
+  const startTime = (store as any).startTime ?? "";
+  const endTime = (store as any).endTime ?? "";
+  const ageRestriction = (store as any).ageRestriction ?? "";
+  const website = (store as any).website ?? "";
+  const socialMedia = (store as any).socialMedia ?? "";
   const description = store.description ?? "";
-  const price = store.salePrice ?? store.price ?? "";
+  const price = (store as any).salePrice ?? (store as any).price ?? "";
   const location = store.location ?? {};
   const sellerInfo = store.sellerInfo ?? {};
 

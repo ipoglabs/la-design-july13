@@ -9,7 +9,8 @@ import { toast } from "sonner";
 
 export default function B2BServiceForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const store = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);
@@ -22,7 +23,7 @@ export default function B2BServiceForm() {
   const company = (store as any).company ?? "";
   const description = store.description ?? "";
   const website = (store as any).website ?? "";
-  const price = (store as any).price ?? store.salePrice ?? "";
+  const price = (store as any).price ?? (store as any).salePrice ?? "";
 
   const location = store.location ?? {};
   const sellerInfo = store.sellerInfo ?? {};

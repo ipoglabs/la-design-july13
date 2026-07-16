@@ -9,7 +9,8 @@ import { toast } from "sonner";
 
 export default function EducationLearningForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const store = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);
@@ -18,11 +19,11 @@ export default function EducationLearningForm() {
   const subcategory = store.subcategory;
 
   const name = store.name ?? "";
-  const institutionName = store.institutionName ?? "";
-  const educationCategory = store.educationCategory ?? "";
-  const mode = store.mode ?? "";
-  const duration = store.duration ?? "";
-  const price = store.price ?? store.salePrice ?? "";
+  const institutionName = (store as any).institutionName ?? "";
+  const educationCategory = (store as any).educationCategory ?? "";
+  const mode = (store as any).mode ?? "";
+  const duration = (store as any).duration ?? "";
+  const price = (store as any).price ?? (store as any).salePrice ?? "";
   const description = store.description ?? "";
   const location = store.location ?? {};
   const sellerInfo = store.sellerInfo ?? {};

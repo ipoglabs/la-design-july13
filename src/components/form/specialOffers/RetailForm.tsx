@@ -9,7 +9,8 @@ import { toast } from "sonner";
 
 export default function RetailShoppingForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const store = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);
@@ -18,18 +19,18 @@ export default function RetailShoppingForm() {
   const subcategory = store.subcategory;
 
   const name = store.name ?? "";
-  const brand = store.brand ?? "";
-  const model = store.model ?? "";
-  const size = store.size ?? "";
-  const color = store.color ?? "";
-  const material = store.material ?? "";
-  const warranty = store.warranty ?? "";
-  const returnPolicy = store.returnPolicy ?? "";
-  const offers = store.offers ?? "";
-  const condition = store.condition ?? "";
-  const deliveryOption = store.deliveryOption ?? "";
-  const price = store.price ?? store.salePrice ?? "";
-  const quantity = store.quantity ?? "";
+  const brand = (store as any).brand ?? "";
+  const model = (store as any).model ?? "";
+  const size = (store as any).size ?? "";
+  const color = (store as any).color ?? "";
+  const material = (store as any).material ?? "";
+  const warranty = (store as any).warranty ?? "";
+  const returnPolicy = (store as any).returnPolicy ?? "";
+  const offers = (store as any).offers ?? "";
+  const condition = (store as any).condition ?? "";
+  const deliveryOption = (store as any).deliveryOption ?? "";
+  const price = (store as any).price ?? (store as any).salePrice ?? "";
+  const quantity = (store as any).quantity ?? "";
   const description = store.description ?? "";
   const sellerInfo = store.sellerInfo ?? {};
 

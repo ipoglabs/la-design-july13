@@ -9,7 +9,8 @@ import { toast } from "sonner";
 
 export default function ElectronicsGadgetsForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const store = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);
@@ -18,10 +19,10 @@ export default function ElectronicsGadgetsForm() {
   const subcategory = store.subcategory;
 
   const name = store.name ?? "";
-  const brand = store.brand ?? "";
-  const electronicsCategory = store.electronicsCategory ?? "";
-  const condition = store.condition ?? "";
-  const price = store.salePrice ?? store.price ?? "";
+  const brand = (store as any).brand ?? "";
+  const electronicsCategory = (store as any).electronicsCategory ?? "";
+  const condition = (store as any).condition ?? "";
+  const price = (store as any).salePrice ?? (store as any).price ?? "";
   const description = store.description ?? "";
   const location = store.location ?? {};
   const sellerInfo = store.sellerInfo ?? {};

@@ -11,7 +11,8 @@ import { toast } from "sonner";
 export default function PropertySaleForm() {
   const formRef  = useRef<HTMLFormElement | null>(null);
   const config   = usePropertyConfig();
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
   const setField = usePostFormStore((s) => s.setField);
 
   const name        = usePostFormStore((s) => s.name) ?? "";

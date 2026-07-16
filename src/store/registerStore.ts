@@ -9,15 +9,18 @@ import type {
   ProfileForm,
 } from '@/lib/validators';
 
+type DraftGeneralInfo = Omit<GeneralInfoForm, 'gender'> & {
+  gender: GeneralInfoForm['gender'] | '';
+};
+
 type RegisterState = {
   /* ------------------------------------------------ */
   /* GENERAL INFO                                     */
   /* ------------------------------------------------ */
 
-  general: GeneralInfoForm;
-
+  general: DraftGeneralInfo;
   updateGeneral: (
-    data: Partial<GeneralInfoForm>
+    data: Partial<DraftGeneralInfo>
   ) => void;
 
   /* ------------------------------------------------ */

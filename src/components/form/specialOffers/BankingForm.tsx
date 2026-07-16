@@ -9,7 +9,8 @@ import { toast } from "sonner";
 
 export default function BankingFinancialForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const store = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);
@@ -18,16 +19,16 @@ export default function BankingFinancialForm() {
   const subcategory = store.subcategory;
 
   const name = store.name ?? "";
-  const dealType = store.dealType ?? "";
-  const institutionName = store.institutionName ?? "";
+  const dealType = (store as any).dealType ?? "";
+  const institutionName = (store as any).institutionName ?? "";
   const description = store.description ?? "";
-  const interestRate = store.interestRate ?? "";
-  const tenure = store.tenure ?? "";
-  const minAmount = store.minAmount ?? "";
-  const maxAmount = store.maxAmount ?? "";
-  const eligibility = store.eligibility ?? "";
-  const documents = store.documents ?? "";
-  const validUntil = store.validUntil ?? "";
+  const interestRate = (store as any).interestRate ?? "";
+  const tenure = (store as any).tenure ?? "";
+  const minAmount = (store as any).minAmount ?? "";
+  const maxAmount = (store as any).maxAmount ?? "";
+  const eligibility = (store as any).eligibility ?? "";
+  const documents = (store as any).documents ?? "";
+  const validUntil = (store as any).validUntil ?? "";
 
   const sellerInfo = store.sellerInfo ?? {};
 

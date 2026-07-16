@@ -11,10 +11,11 @@ import { toast } from "sonner";
 export default function JobWantedForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
   const config  = useJobConfig();
-  const { currency, locationPlaceholder } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const setField   = usePostFormStore((s) => s.setField);
-  const skills     = usePostFormStore((s) => s.skills);
+  const skills     = usePostFormStore((s) => (s as any).skills);
   const sellerInfo = usePostFormStore((s) => s.sellerInfo);
 
   const name        = usePostFormStore((s) => s.name) ?? "";
@@ -119,7 +120,7 @@ export default function JobWantedForm() {
         field="preferred_locations"
         value={preferred_locations}
         onChange={(v) => setField("preferred_locations", v)}
-        placeholder={locationPlaceholder}
+        placeholder="Enter preferred location"
       />
 
       <FormField

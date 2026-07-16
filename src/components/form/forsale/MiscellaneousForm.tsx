@@ -9,7 +9,8 @@ import { toast } from "sonner";
 
 export default function MiscellaneousForm() {
   const formRef = useRef<HTMLFormElement | null>(null);
-  const { currency } = useCountryConfig();
+  const { countryConfig } = useCountryConfig();
+  const currency = countryConfig.currency;
 
   const store = usePostFormStore();
   const setField = usePostFormStore((s) => s.setField);
@@ -20,7 +21,7 @@ export default function MiscellaneousForm() {
   const name = store.name ?? "";
   const description = store.description ?? "";
   const condition = (store as any).condition ?? "";
-  const price = (store as any).price ?? store.salePrice ?? "";
+  const price = (store as any).price ?? (store as any).salePrice ?? "";
   const negotiable = (store as any).negotiable ?? "";
   const location = store.location ?? {};
   const sellerInfo = store.sellerInfo ?? {};

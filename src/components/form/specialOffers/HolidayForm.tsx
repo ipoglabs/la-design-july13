@@ -16,20 +16,20 @@ export default function HolidayOffersForm() {
   const subcategory = store.subcategory;
 
   const name = store.name ?? "";
-  const providerName = store.providerName ?? "";
-  const holidayCategory = store.holidayCategory ?? "";
-  const startDate = store.startDate ?? "";
-  const endDate = store.endDate ?? "";
+  const providerName = (store as any).providerName ?? "";
+  const holidayCategory = (store as any).holidayCategory ?? "";
+  const startDate = (store as any).startDate ?? "";
+  const endDate = (store as any).endDate ?? "";
   const location = store.location ?? {};
-  const price = store.price ?? store.salePrice ?? "";
-  const discount = store.discount ?? "";
-  const couponCode = store.couponCode ?? "";
-  const bookingLink = store.bookingLink ?? "";
-  const maxParticipants = store.maxParticipants ?? "";
-  const audience = store.audience ?? "";
-  const mediaUrl = store.mediaUrl ?? "";
+  const price = (store as any).price ?? (store as any).salePrice ?? "";
+  const discount = (store as any).discount ?? "";
+  const couponCode = (store as any).couponCode ?? "";
+  const bookingLink = (store as any).bookingLink ?? "";
+  const maxParticipants = (store as any).maxParticipants ?? "";
+  const audience = (store as any).audience ?? "";
+  const mediaUrl = (store as any).mediaUrl ?? "";
   const description = store.description ?? "";
-  const terms = store.terms ?? "";
+  const terms = (store as any).terms ?? "";
   const sellerInfo = store.sellerInfo ?? {};
 
   const [errors, setErrors] = useState<Record<string, string>>({});

@@ -187,6 +187,19 @@ export interface IPost {
   // Service → Wanted
   urgency?: string;
 
+  /** ===== Moderation ===== */
+  reported?: boolean;
+  reports?: {
+    reason?: string;
+    by?: mongoose.Types.ObjectId;
+    at?: Date;
+  }[];
+  reportedAt?: Date;
+  reportedBy?: mongoose.Types.ObjectId;
+  isSuspended?: boolean;
+  suspendedAt?: Date;
+  suspendedBy?: mongoose.Types.ObjectId;
+
   /** timestamps (added by Mongoose) */
   createdAt?: Date;
   updatedAt?: Date;

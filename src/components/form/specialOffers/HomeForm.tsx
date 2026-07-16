@@ -15,19 +15,19 @@ export default function HomeLivingForm() {
   const category = store.category;
   const subcategory = store.subcategory;
 
-  const name = store.name ?? store.itemName ?? "";
-  const brandName = store.brandName ?? "";
-  const categoryType = store.categoryType ?? "";
-  const condition = store.condition ?? "";
-  const material = store.material ?? "";
-  const dimensions = store.dimensions ?? "";
-  const color = store.color ?? "";
-  const weight = store.weight ?? "";
-  const warranty = store.warranty ?? "";
-  const usageDuration = store.usageDuration ?? "";
-  const price = store.price ?? store.salePrice ?? "";
-  const deliveryOption = store.deliveryOption ?? "";
-  const mediaUrl = store.mediaUrl ?? "";
+  const name = store.name ?? (store as any).itemName ?? "";
+  const brandName = (store as any).brandName ?? "";
+  const categoryType = (store as any).categoryType ?? "";
+  const condition = (store as any).condition ?? "";
+  const material = (store as any).material ?? "";
+  const dimensions = (store as any).dimensions ?? "";
+  const color = (store as any).color ?? "";
+  const weight = (store as any).weight ?? "";
+  const warranty = (store as any).warranty ?? "";
+  const usageDuration = (store as any).usageDuration ?? "";
+  const price = (store as any).price ?? (store as any).salePrice ?? "";
+  const deliveryOption = (store as any).deliveryOption ?? "";
+  const mediaUrl = (store as any).mediaUrl ?? "";
   const description = store.description ?? "";
 
   const location = store.location ?? {};

@@ -16,16 +16,16 @@ export default function HealthWellnessForm() {
   const subcategory = store.subcategory;
 
   const name = store.name ?? "";
-  const providerName = store.providerName ?? "";
-  const wellnessCategory = store.wellnessCategory ?? "";
-  const serviceType = store.serviceType ?? "";
-  const price = store.price ?? store.salePrice ?? "";
-  const duration = store.duration ?? "";
-  const availability = store.availability ?? "";
-  const certifications = store.certifications ?? "";
-  const experience = store.experience ?? "";
-  const website = store.website ?? "";
-  const languages = store.languages ?? "";
+  const providerName = (store as any).providerName ?? "";
+  const wellnessCategory = (store as any).wellnessCategory ?? "";
+  const serviceType = (store as any).serviceType ?? "";
+  const price = (store as any).price ?? (store as any).salePrice ?? "";
+  const duration = (store as any).duration ?? "";
+  const availability = (store as any).availability ?? "";
+  const certifications = (store as any).certifications ?? "";
+  const experience = (store as any).experience ?? "";
+  const website = (store as any).website ?? "";
+  const languages = (store as any).languages ?? "";
   const description = store.description ?? "";
   const location = store.location ?? {};
   const sellerInfo = store.sellerInfo ?? {};
