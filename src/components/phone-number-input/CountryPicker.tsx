@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose, DrawerFooter } from "@/components/ui/drawer";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose as DClose } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from "@/components/ui/drawer";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { COUNTRIES, Country } from "./countries";
 import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
@@ -92,15 +92,8 @@ export function CountryPicker({ open, onClose, selected, onSelect, countries }: 
     return (
       <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
         <DialogContent className={cn("w-full p-0", isThumbnail ? "max-w-sm" : "max-w-sm")}>
-          <DialogHeader>
+          <DialogHeader className="p-4 pb-0">
             <DialogTitle>Select Country</DialogTitle>
-            <DClose asChild>
-              <button type="button" aria-label="Close" className="flex h-7 w-7 flex-none items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-300 hover:text-slate-800">
-                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden>
-                  <path d="M18 6L6 18M6 6l12 12" strokeWidth="2.5" strokeLinecap="round" />
-                </svg>
-              </button>
-            </DClose>
           </DialogHeader>
           {isThumbnail ? thumbnailContent : content}
         </DialogContent>

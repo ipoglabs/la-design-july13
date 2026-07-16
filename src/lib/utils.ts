@@ -11,6 +11,17 @@ export function formatPhone(country: Country, phone: string) {
 }
 
 /**
+ * Appends a `?redirect=` query param to `path` if `redirect` is present —
+ * shared by Register's and Login's step components so the `?redirect=`
+ * target (e.g. `/post`) survives every hop of the wizard instead of only
+ * being read on the final step. Returns `path` unchanged when `redirect`
+ * is null/empty.
+ */
+export function withRedirectParam(path: string, redirect: string | null): string {
+  return redirect ? `${path}?redirect=${encodeURIComponent(redirect)}` : path;
+}
+
+/**
  * Controls how the email is displayed in the verify-otp stage.
  *
  * - `"local-first"` (Option A): `j***@gmail.com`         — first char only + domain

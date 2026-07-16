@@ -37,8 +37,6 @@ export type DateInputProps = {
   label?: string;
   className?: string;
   inputClassName?: string;
-  /** Native autocomplete hint, e.g. "bday" */
-  autoComplete?: string;
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -165,7 +163,6 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
       label,
       className,
       inputClassName,
-      autoComplete,
     },
     ref
   ) => {
@@ -307,7 +304,6 @@ export const DateInput = React.forwardRef<HTMLInputElement, DateInputProps>(
             onBlur={() => { setFocused(false); setTouched(true); }}
             placeholder={derivedPlaceholder}
             disabled={disabled}
-            autoComplete={autoComplete}
             aria-label={label ?? derivedPlaceholder}
             aria-describedby={errorId}
             className={baseInputClass}

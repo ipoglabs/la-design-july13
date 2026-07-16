@@ -15,7 +15,7 @@ export interface LaSwitchProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size" | "type"> {
   checked?: boolean;
   onCheckedChange?: (checked: boolean) => void;
-  size?: "sm" | "default";
+  size?: "sm" | "default" | "lg";
   label?: string;
   description?: string;
   className?: string;

@@ -236,8 +236,10 @@ export default function AppFooter({ countryCode, countryLabel, variant = "defaul
         </div>
       </div>
 
-      {/* Donation banner — controlled by features.donationFooter in country-config */}
-      {features.donationFooter && (
+      {/* Donation banner — controlled by features.donationFooter in country-config;
+          hidden on "simple" variant (login/register/signup) since a growth/goodwill
+          CTA has no place on a conversion-critical single-purpose screen. */}
+      {features.donationFooter && effectiveVariant === "default" && (
         <div className="bg-white">
           <div className="container-app py-3 flex flex-col sm:flex-row flex-wrap gap-3 items-center justify-center text-center max-w-5xl">
             <p className="text-lg text-slate-700 italic">&ldquo;Your support makes lokalads possible. Lets grow together!&rdquo;</p>

@@ -12,6 +12,28 @@ export function isValidPhone(value: string, minLen = 6) {
   return digits.length >= minLen;
 }
 
+/** E.164-ish check for a fully-formatted number like "+65 9123 4567" — strips
+ *  separators first, then requires a leading "+" and 7-15 digits total. */
+export function isValidE164Phone(value: string) {
+  const digits = normalizePhoneDigits(value);
+  return /^\+/.test(value.trim()) && digits.length >= 7 && digits.length <= 15;
+}
+
+/**
+ * Strip HTML tags, null bytes, and ASCII control chars, then trim and cap at
+ * `maxLen`. Returns null if input isn't a string or is empty after cleanup.
+ * Use at API boundaries for any free-text field from the client.
+ */
+export function sanitizeText(value: unknown, maxLen: number): string | null {
+  if (typeof value !== "string") return null;
+  const cleaned = value
+    .replace(/<[^>]*>/g, "")
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .trim()
+    .slice(0, maxLen);
+  return cleaned || null;
+}
+
 /** Age gate — subject must be `minAge` or older. Accepts an ISO date string (YYYY-MM-DD). */
 export function isAgeValid(dobIso: string, minAge = 18) {
   const birth = new Date(`${dobIso}T00:00:00`);
