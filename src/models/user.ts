@@ -10,6 +10,17 @@ const AddressSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// Saved Locations (account-settings) — scopes which local listings a user
+// sees. Kept `_id: true` (the default) so each entry has its own stable id
+// for add/remove — see app/actions/profile/{add,remove}SavedLocation.ts.
+const SavedLocationSchema = new mongoose.Schema({
+  flagCode: { type: String, required: true, trim: true },
+  city: { type: String, required: true, trim: true },
+  region: { type: String, trim: true, default: "" },
+  country: { type: String, required: true, trim: true },
+  primary: { type: Boolean, default: false },
+});
+
 const OtpSchema = new mongoose.Schema(
   {
     channel: {
@@ -61,6 +72,7 @@ const UserSchema = new mongoose.Schema(
 
     locality: { type: String, trim: true },
     address: AddressSchema,
+    savedLocations: { type: [SavedLocationSchema], default: [] },
 
     email: {
       type: String,

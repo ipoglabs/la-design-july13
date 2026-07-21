@@ -7,6 +7,15 @@ import { verifyToken } from "@/lib/auth";
 import { isSessionRevoked } from "@/lib/userSession";
 import type { ProfileUser } from "@/app/(dashboard)/profile/types";
 
+type RawSavedLocation = {
+  _id: unknown;
+  flagCode?: string;
+  city?: string;
+  region?: string;
+  country?: string;
+  primary?: boolean;
+};
+
 export async function getCurrentUser(): Promise<ProfileUser | null> {
   const cookieStore = await cookies();
   const token =
@@ -30,7 +39,7 @@ export async function getCurrentUser(): Promise<ProfileUser | null> {
   // ONE query — fetch full doc and check status in the same round-trip
   const user: any = await User.findById(userId)
     .select(
-      "userId username fullName dateOfBirth gender nationality residency email primaryNumber secondaryNumber1 secondaryNumber2 role roleTitle roleDescription image marketingOptIn locality address isDeleted isSuspended accountStatus"
+      "userId username fullName dateOfBirth gender nationality residency email primaryNumber secondaryNumber1 secondaryNumber2 role roleTitle roleDescription image marketingOptIn locality address savedLocations isDeleted isSuspended accountStatus"
     )
     .lean();
 
@@ -71,5 +80,13 @@ export async function getCurrentUser(): Promise<ProfileUser | null> {
       city: user.address?.city || "",
       postalCode: user.address?.postalCode || "",
     },
+    savedLocations: (user.savedLocations || []).map((loc: RawSavedLocation) => ({
+      id: String(loc._id),
+      flagCode: loc.flagCode || "un",
+      city: loc.city || "",
+      region: loc.region || "",
+      country: loc.country || "",
+      primary: Boolean(loc.primary),
+    })),
   };
 }

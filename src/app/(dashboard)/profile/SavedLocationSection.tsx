@@ -6,12 +6,19 @@
  * remove (with confirm dialog). Split out of page.tsx (Golden Rule
  * file-size split, 2026-07-14).
  *
- * Exports INITIAL_LOCATIONS (ProfilePage's seed state) and countryFromToken
- * (also reused by ResidenceEditor.tsx for the same country-name normalizing).
+ * Real, DB-backed (see models/user.ts's savedLocations subdocuments and
+ * app/actions/profile/{add,remove}SavedLocation.ts) — ProfilePageScreen
+ * seeds `locations` from getCurrentUser(), and this component persists
+ * every add/remove through those server actions itself before touching
+ * local state, so a failed request never silently diverges from the DB.
+ *
+ * Exports countryFromToken (also reused by ResidenceEditor.tsx for the
+ * same country-name normalizing).
  */
 
 import { useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { MapPin, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { LaButton, LaCard } from "@/components/la";
 import { LocationPicker, type LocationValue } from "@/components/location-picker";
 import {
@@ -25,13 +32,9 @@ import {
   AlertDialogMedia,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { addSavedLocation } from "@/app/actions/profile/addSavedLocation";
+import { removeSavedLocation } from "@/app/actions/profile/removeSavedLocation";
 import type { SavedLocation } from "./types";
-
-export const INITIAL_LOCATIONS: SavedLocation[] = [
-  { id: 1, flagCode: "sg", city: "Marina Bay", region: "Central Region", country: "Singapore", primary: true },
-  { id: 2, flagCode: "gb", city: "Canary Wharf", region: "London, England", country: "United Kingdom" },
-  { id: 3, flagCode: "in", city: "Tiruchirappalli", region: "Tamil Nadu", country: "India" },
-];
 
 export function countryFromToken(token: string): { country: string; flagCode: string } {
   const lower = token.trim().toLowerCase();
@@ -44,7 +47,7 @@ export function countryFromToken(token: string): { country: string; flagCode: st
   return { country: token.trim(), flagCode: "un" };
 }
 
-function mapPickerValueToSavedLocation(v: LocationValue): SavedLocation {
+function mapPickerValueToLocationInput(v: LocationValue): Omit<SavedLocation, "id" | "primary"> {
   const parts = (v.sublabel ?? "")
     .split(",")
     .map((p) => p.trim())
@@ -63,7 +66,7 @@ function mapPickerValueToSavedLocation(v: LocationValue): SavedLocation {
   }
 
   const flag = countryFromToken(country).flagCode;
-  return { id: Date.now() + Math.floor(Math.random() * 1000), flagCode: flag, city: v.label, region, country };
+  return { flagCode: flag, city: v.label, region, country };
 }
 
 export function SavedLocationSection({
@@ -74,6 +77,7 @@ export function SavedLocationSection({
   setLocations: Dispatch<SetStateAction<SavedLocation[]>>;
 }) {
   const [pendingDelete, setPendingDelete] = useState<SavedLocation | null>(null);
+  const [saving, setSaving] = useState(false);
   const pickerHostRef = useRef<HTMLDivElement>(null);
 
   const openLocationPicker = () => {
@@ -83,22 +87,46 @@ export function SavedLocationSection({
     trigger?.click();
   };
 
-  const handleAddLocation = (value: LocationValue | null) => {
+  const handleAddLocation = async (value: LocationValue | null) => {
     if (!value) return;
-    const next = mapPickerValueToSavedLocation(value);
+    const next = mapPickerValueToLocationInput(value);
     const isDuplicate = locations.some(
       (l) =>
         l.city.toLowerCase() === next.city.toLowerCase() &&
         l.country.toLowerCase() === next.country.toLowerCase(),
     );
-    // TODO [INTEGRATION]: POST /api/profile/locations { flagCode, city, region, country }
-    if (!isDuplicate) setLocations((prev) => [...prev, next]);
+    if (isDuplicate) return;
+
+    setSaving(true);
+    try {
+      const created = await addSavedLocation(next);
+      setLocations((prev) => [...prev, created]);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't save that location");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const confirmDelete = () => {
-    // TODO [INTEGRATION]: DELETE /api/profile/locations/{id}
-    if (pendingDelete) setLocations((prev) => prev.filter((l) => l.id !== pendingDelete.id));
-    setPendingDelete(null);
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    const target = pendingDelete;
+    setSaving(true);
+    try {
+      await removeSavedLocation(target.id);
+      setLocations((prev) => {
+        const filtered = prev.filter((l) => l.id !== target.id);
+        const hasPrimary = filtered.some((l) => l.primary);
+        return !hasPrimary && filtered.length > 0
+          ? filtered.map((l, i) => ({ ...l, primary: i === 0 }))
+          : filtered;
+      });
+      setPendingDelete(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't remove that location");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -111,6 +139,7 @@ export function SavedLocationSection({
             intent="ghost"
             size="compact"
             onClick={openLocationPicker}
+            disabled={saving}
             className="gap-1 px-2 text-sm font-semibold text-slate-500 hover:bg-slate-100 hover:text-slate-800"
           >
             <Plus className="size-3.5" />
@@ -165,7 +194,8 @@ export function SavedLocationSection({
                 type="button"
                 aria-label={`Remove ${loc.city}`}
                 onClick={() => setPendingDelete(loc)}
-                className="shrink-0 text-slate-400 transition-colors hover:text-rose-500"
+                disabled={saving}
+                className="shrink-0 text-slate-400 transition-colors hover:text-rose-500 disabled:opacity-50"
               >
                 <Trash2 className="size-4" strokeWidth={1.75} />
               </button>
@@ -188,8 +218,8 @@ export function SavedLocationSection({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={confirmDelete}>
-              Remove
+            <AlertDialogAction variant="destructive" onClick={confirmDelete} disabled={saving}>
+              {saving ? "Removing…" : "Remove"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

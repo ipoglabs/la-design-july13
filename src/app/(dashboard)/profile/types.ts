@@ -32,7 +32,7 @@ export type ContactValues = {
 };
 
 export type SavedLocation = {
-  id: number;
+  id: string; // Mongo subdocument _id — see User.savedLocations in models/user.ts
   flagCode: string; // ISO 3166-1 alpha-2 lowercase, e.g. "sg", "gb", "in"
   city: string;
   region: string;
@@ -86,4 +86,5 @@ export type ProfileUser = {
     city: string;
     postalCode: string;
   };
+  savedLocations: SavedLocation[];
 };

@@ -78,7 +78,7 @@ import { HandleEditor } from "./HandleEditor";
 import { BasicInfoEditor, formatDobLabel, getInitials } from "./BasicInfoEditor";
 import { RolesEditor, formatRoleBadge } from "./RolesEditor";
 import { ResidenceEditor } from "./ResidenceEditor";
-import { SavedLocationSection, INITIAL_LOCATIONS } from "./SavedLocationSection";
+import { SavedLocationSection } from "./SavedLocationSection";
 import { ChangePasswordEditor } from "./ChangePasswordEditor";
 import {
   NotificationsEditor,
@@ -213,7 +213,7 @@ export function ProfilePageScreen({
     city: user.address?.city || user.locality || "",
   });
 
-  const [locations, setLocations] = useState<SavedLocation[]>(INITIAL_LOCATIONS);
+  const [locations, setLocations] = useState<SavedLocation[]>(user.savedLocations);
   const primaryLocation = locations.find((l) => l.primary) ?? null;
 
   // Devices list only matters in account-settings mode — skip the fetch
