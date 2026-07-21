@@ -4,6 +4,7 @@ import dbConnect from "@/lib/db";
 import User from "@/models/user";
 import { verifyIdentityProof } from "@/lib/auth-proof";
 import { normalizeTarget } from "@/lib/otpUtils";
+import { createUserSession } from "@/lib/userSession";
 
 const COOKIE_NAME = "session";
 const UINFO_COOKIE_NAME = "uinfo";
@@ -63,11 +64,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ data: { matched: false } });
     }
 
+    const sid = await createUserSession(String(user._id), req);
     const token = signJwt({
       userId: String(user._id),
       email: user.email,
       primaryNumber: user.primaryNumber,
       role: user.role ?? "user",
+      sid,
     });
 
     const res = NextResponse.json({ data: { matched: true } });

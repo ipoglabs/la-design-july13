@@ -59,6 +59,10 @@ interface RegisterState {
   /** Email (magic_link) or phone digits (phone_otp) — null for google/apple. */
   identifier: string | null;
   verified: boolean;
+  /** Short-lived identity-proof token minted by verify-magic/phone verify-otp
+   *  (see `lib/auth-proof.ts`) — required by `complete-profile`'s
+   *  `verifyIdentityProof` check. Without this, complete-profile 401s. */
+  proof: string | null;
   /** True the moment identity is proven (OAuth success or OTP verified) —
    *  the account/session already exists from this point on, even though
    *  Details/Role haven't been filled in yet. See header note above. */
@@ -72,6 +76,7 @@ interface RegisterState {
 
   setMethod: (method: SignupMethod, identifier: string | null) => void;
   setVerified: (verified: boolean) => void;
+  setProof: (proof: string | null) => void;
   /** Marks identity as proven and the account as (silently) created — call
    *  right after OAuth success or right after OTP verification succeeds. */
   markAccountCreated: (prefillFullName?: string) => void;
@@ -82,11 +87,12 @@ interface RegisterState {
 
 const INITIAL: Pick<
   RegisterState,
-  "method" | "identifier" | "verified" | "accountCreated" | "roleIds" | "specialties" | "customRole" | "fullName" | "gender" | "dateOfBirthIso"
+  "method" | "identifier" | "verified" | "proof" | "accountCreated" | "roleIds" | "specialties" | "customRole" | "fullName" | "gender" | "dateOfBirthIso"
 > = {
   method: null,
   identifier: null,
   verified: false,
+  proof: null,
   accountCreated: false,
   roleIds: [],
   specialties: {},
@@ -100,8 +106,9 @@ export const useOnboardingStore = create<RegisterState>()(
   persist(
     (set) => ({
       ...INITIAL,
-      setMethod: (method, identifier) => set({ method, identifier, verified: false }),
+      setMethod: (method, identifier) => set({ method, identifier, verified: false, proof: null }),
       setVerified: (verified) => set({ verified }),
+      setProof: (proof) => set({ proof }),
       markAccountCreated: (prefillFullName) =>
         set((state) => ({
           accountCreated: true,

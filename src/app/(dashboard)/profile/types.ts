@@ -40,17 +40,19 @@ export type SavedLocation = {
   primary?: boolean;
 };
 
-export type ConnectedAccountProvider = "google" | "apple" | "magic_link";
-
-export type ConnectedAccountStatus = "connected" | "not_connected";
-
-export type ConnectedAccount = {
-  provider: ConnectedAccountProvider;
-  status: ConnectedAccountStatus;
-  maskedIdentifier: string | null;
-  linkedAtIso: string | null;
-  lastUsedLabel: string | null;
-  isPrimary: boolean;
+/**
+ * One row in the account-settings "Login and Security" Devices list — one
+ * signed-in device/browser for this account's single email/phone identity.
+ * Mirrors `GET /api/auth/sessions`'s response shape (see that route and
+ * `models/session.ts`).
+ */
+export type DeviceSession = {
+  sessionId: string;
+  deviceLabel: string;
+  location: string;
+  createdAtIso: string | null;
+  lastActiveAtIso: string | null;
+  isCurrent: boolean;
 };
 
 /**

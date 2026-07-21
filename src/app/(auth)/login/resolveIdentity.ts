@@ -65,15 +65,24 @@ export async function resolveIdentity({
     const firstName = fullName?.trim().split(/\s+/)[0] || "back";
     toast.success(`Welcome ${firstName === "back" ? "back" : firstName}!`);
     router.push(redirectTarget);
+    // router.push() alone does not re-run the root layout Server Component,
+    // so AppHeader's server-seeded `user` prop would stay stale (logged out)
+    // even though the session cookie above is already set — force it to
+    // re-fetch getSession() (mirrors auth/google-success/page.tsx).
+    router.refresh();
     return;
   }
 
   // No matching account — hand off into the shared onboarding store and
   // converge onto Register's own Details/Role screens.
-  const { setMethod, setVerified, markAccountCreated } = useOnboardingStore.getState();
+  const { setMethod, setVerified, setProof, markAccountCreated } = useOnboardingStore.getState();
   setMethod(method, identifier);
   if (method === "magic_link" || method === "phone_otp") {
     setVerified(true);
+    // setMethod() above clears `proof` (new identifier) — restore it after,
+    // since `proof` is exactly the token this function was just handed and
+    // RoleStep's complete-profile call requires it (see onboardingStore.ts).
+    setProof(proof);
   }
   markAccountCreated(fullName);
   router.push(withRedirectParam("/register/details", redirectParam));

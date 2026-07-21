@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import type { AuthUser } from "@/types/auth";
 import { verifyToken } from "@/lib/auth";
+import { isSessionRevoked } from "@/lib/userSession";
 import dbConnect from "@/lib/db";
 import User from "@/models/user";
 
@@ -29,6 +30,8 @@ export async function getSession(): Promise<AuthUser | null> {
   if (!userId) return null;
 
   await dbConnect();
+
+  if (await isSessionRevoked(payload.sid, userId)) return null;
 
   const user: any = await User.findById(userId)
     .select("fullName image role isDeleted isSuspended accountStatus")

@@ -38,6 +38,7 @@ import {
   MessageCircle,
   User,
   History,
+  Settings,
   Globe2,
   LogOut,
   ChevronDown,
@@ -58,6 +59,7 @@ const NAV_ITEMS = [
   { label: "Chat",             icon: MessageCircle, href: "/chat" },
   { label: "Profile",          icon: User,          href: "/profile" },
   { label: "Donation History", icon: History,       href: "/donation-history" },
+  { label: "Account Settings", icon: Settings,      href: "/account-settings" },
 ] as const;
 
 /* ─── guest menu ─────────────────────────────────────────────── */

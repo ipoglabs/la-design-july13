@@ -18,7 +18,7 @@
  */
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ShieldAlert,
   Trash2,
@@ -32,6 +32,8 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
+  Monitor,
+  LogOut,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useDeleteAccountStore } from "@/lib/stores/deleteAccountStore";
@@ -65,7 +67,7 @@ import {
 
 import type {
   BasicInfoValues,
-  ConnectedAccount,
+  DeviceSession,
   ContactValues,
   ProfileUser,
   ResidenceValues,
@@ -154,8 +156,18 @@ export function ProfilePageScreen({
   const [phoneEditorId, setPhoneEditorId] = useState<string | null>(null);
   const [addPhoneEditorOpen, setAddPhoneEditorOpen] = useState(false);
   const [phonePendingDelete, setPhonePendingDelete] = useState<string | null>(null);
-  const [accountPendingDisconnect, setAccountPendingDisconnect] = useState<ConnectedAccount["provider"] | null>(null);
   const MAX_PHONES = 3;
+
+  // Devices (Login and Security) — one row per signed-in session, backed by
+  // the real Session collection (see models/session.ts). A single email/
+  // phone identity can be signed in on several devices at once; each is
+  // individually revocable, or all-but-current in one action.
+  const [devices, setDevices] = useState<DeviceSession[]>([]);
+  const [devicesLoading, setDevicesLoading] = useState(true);
+  const [devicePendingRevoke, setDevicePendingRevoke] = useState<DeviceSession | null>(null);
+  const [revokingSessionId, setRevokingSessionId] = useState<string | null>(null);
+  const [revokeOthersConfirmOpen, setRevokeOthersConfirmOpen] = useState(false);
+  const [revokeOthersLoading, setRevokeOthersLoading] = useState(false);
 
   // Account Settings
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
@@ -203,97 +215,82 @@ export function ProfilePageScreen({
 
   const [locations, setLocations] = useState<SavedLocation[]>(INITIAL_LOCATIONS);
   const primaryLocation = locations.find((l) => l.primary) ?? null;
-  // Connected accounts (Google/Apple/magic-link) aren't tracked on the User
-  // model yet — this stays local-only UI state until that's added.
-  const [connectedAccounts, setConnectedAccounts] = useState<ConnectedAccount[]>([
-    {
-      provider: "magic_link",
-      status: "connected",
-      maskedIdentifier: user.email,
-      linkedAtIso: null,
-      lastUsedLabel: "Current sign-in method",
-      isPrimary: true,
-    },
-  ]);
 
-  const connectedMethodsCount = connectedAccounts.filter((a) => a.status === "connected").length;
+  // Devices list only matters in account-settings mode — skip the fetch
+  // entirely on /profile.
+  useEffect(() => {
+    if (mode !== "account-settings") return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/sessions", { credentials: "include" });
+        if (!res.ok) throw new Error("failed to load sessions");
+        const { data } = await res.json();
+        if (!cancelled) setDevices(data.sessions ?? []);
+      } catch {
+        if (!cancelled) toast.error("Couldn't load your signed-in devices.");
+      } finally {
+        if (!cancelled) setDevicesLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [mode]);
 
-  const getDisconnectBlockReason = (account: ConnectedAccount): string | null => {
-    if (account.status !== "connected") return null;
-    if (connectedMethodsCount <= 1) return "Add another sign-in method before disconnecting this one.";
-    return null;
-  };
-
-  const providerLabel = (provider: ConnectedAccount["provider"]): string => {
-    if (provider === "google") return "Google";
-    if (provider === "apple") return "Apple";
-    return "Email Magic Link";
-  };
-
-  const formatLinkedDate = (iso: string | null): string => {
+  const formatDeviceDate = (iso: string | null): string => {
     if (!iso) return "-";
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return "-";
-    return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    return `${d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })} · ${d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}`;
   };
 
-  const connectMethod = (provider: ConnectedAccount["provider"]) => {
-    const now = new Date().toISOString();
-    setConnectedAccounts((prev) => {
-      const hasPrimaryConnected = prev.some((a) => a.status === "connected" && a.isPrimary);
-      return prev.map((a) =>
-        a.provider === provider
-          ? {
-              ...a,
-              status: "connected" as const,
-              linkedAtIso: a.linkedAtIso ?? now,
-              lastUsedLabel: "Last used today",
-              isPrimary: hasPrimaryConnected ? a.isPrimary : true,
-            }
-          : a
-      );
-    });
-    toast.success(`${providerLabel(provider)} connected.`);
-  };
-
-  const requestDisconnectMethod = (provider: ConnectedAccount["provider"]) => {
-    const target = connectedAccounts.find((a) => a.provider === provider);
-    if (!target || target.status !== "connected") return;
-    if (connectedMethodsCount <= 1) {
-      toast.error("Add another sign-in method before disconnecting this one.");
-      return;
+  const confirmRevokeDevice = async () => {
+    if (!devicePendingRevoke) return;
+    const target = devicePendingRevoke;
+    setRevokingSessionId(target.sessionId);
+    try {
+      const res = await fetch("/api/auth/sessions/revoke", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId: target.sessionId }),
+      });
+      if (!res.ok) throw new Error("revoke failed");
+      const { data } = await res.json();
+      setDevicePendingRevoke(null);
+      if (data.signedOutCurrentDevice) {
+        toast.success("Signed out of this device.");
+        router.push("/");
+        router.refresh();
+        return;
+      }
+      setDevices((prev) => prev.filter((d) => d.sessionId !== target.sessionId));
+      toast.success(`Signed out of ${target.deviceLabel}.`);
+    } catch {
+      toast.error("Couldn't sign out that device. Please try again.");
+    } finally {
+      setRevokingSessionId(null);
     }
-    setAccountPendingDisconnect(provider);
   };
 
-  const confirmDisconnectMethod = () => {
-    if (!accountPendingDisconnect) return;
-    const provider = accountPendingDisconnect;
-    setConnectedAccounts((prev) => {
-      const next = prev.map((a) =>
-        a.provider === provider
-          ? {
-              ...a,
-              status: "not_connected" as const,
-              linkedAtIso: null,
-              lastUsedLabel: null,
-              isPrimary: false,
-            }
-          : a
+  const confirmRevokeOthers = async () => {
+    setRevokeOthersLoading(true);
+    try {
+      const res = await fetch("/api/auth/sessions/revoke-others", { method: "POST" });
+      if (!res.ok) throw new Error("revoke failed");
+      const { data } = await res.json();
+      setDevices((prev) => prev.filter((d) => d.isCurrent));
+      setRevokeOthersConfirmOpen(false);
+      toast.success(
+        data.revokedCount > 0
+          ? `Signed out of ${data.revokedCount} other device${data.revokedCount === 1 ? "" : "s"}.`
+          : "No other devices to sign out."
       );
-
-      const hasPrimaryConnected = next.some((a) => a.status === "connected" && a.isPrimary);
-      if (hasPrimaryConnected) return next;
-
-      const fallbackPrimary = next.find((a) => a.status === "connected");
-      if (!fallbackPrimary) return next;
-
-      return next.map((a) =>
-        a.provider === fallbackPrimary.provider ? { ...a, isPrimary: true } : a
-      );
-    });
-    setAccountPendingDisconnect(null);
-    toast.success(`${providerLabel(provider)} disconnected.`);
+    } catch {
+      toast.error("Couldn't sign out other devices. Please try again.");
+    } finally {
+      setRevokeOthersLoading(false);
+    }
   };
 
   const openPhoneEditor = (id: string) => {
@@ -751,80 +748,75 @@ export function ProfilePageScreen({
           <div className={mode === "account-settings" ? "" : "hidden"}>
           <Section
             label="Login and Security"
-            description="See your sign-in methods at a glance."
+            description={`Signed in as ${contact.email || user.primaryNumber} — here are the devices currently signed in to your account.`}
           >
-            {connectedAccounts.map((account, index) => {
-              const disconnectBlockReason = getDisconnectBlockReason(account);
-              const isDisconnectBlocked = Boolean(disconnectBlockReason);
-
-              return (
+            {devicesLoading ? (
+              <div className="flex items-center gap-2 px-4 py-5 text-sm text-slate-500">
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                Loading devices…
+              </div>
+            ) : devices.length === 0 ? (
+              <div className="px-4 py-5 text-sm text-slate-500">No active devices found.</div>
+            ) : (
+              devices.map((device, index) => (
                 <div
-                  key={account.provider}
+                  key={device.sessionId}
                   className={cn(
-                    "px-4 py-3.5",
-                    index < connectedAccounts.length - 1 && "border-b border-slate-200"
+                    "flex items-start justify-between gap-4 px-4 py-3.5",
+                    index < devices.length - 1 && "border-b border-slate-200"
                   )}
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 flex-1 items-start gap-3">
+                    <Monitor className="mt-0.5 size-5 shrink-0 text-slate-400" strokeWidth={1.5} aria-hidden="true" />
+                    <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <p className="text-lg font-semibold text-slate-900">{providerLabel(account.provider)}</p>
-                        {account.status === "connected" ? (
+                        <p className="text-lg font-semibold text-slate-900">{device.deviceLabel}</p>
+                        {device.isCurrent && (
                           <LaBadge intent="success" size="md" className="gap-1 bg-emerald-50 text-emerald-700">
                             <ShieldCheck className="size-3" />
-                            Connected
+                            This device
                           </LaBadge>
-                        ) : (
-                          <LaBadge intent="neutral" size="md">Not connected</LaBadge>
-                        )}
-                        {account.isPrimary && account.status === "connected" && (
-                          <LaBadge intent="neutral" size="md">Default</LaBadge>
                         )}
                       </div>
-
-                      {account.maskedIdentifier && (
-                        <p className="mt-1 text-base font-medium text-slate-900">{account.maskedIdentifier}</p>
-                      )}
-
+                      <p className="mt-1 text-base font-medium text-slate-900">{device.location}</p>
                       <p className="mt-0.5 text-sm text-slate-600">
-                        {account.status === "connected"
-                          ? `Linked ${formatLinkedDate(account.linkedAtIso)}${account.lastUsedLabel ? ` · ${account.lastUsedLabel}` : ""}`
-                          : "Connect to use this sign-in method"}
+                        {device.isCurrent ? "Active now" : `Last active ${formatDeviceDate(device.lastActiveAtIso)}`}
+                        {" · "}Signed in {formatDeviceDate(device.createdAtIso)}
                       </p>
-
-                      {disconnectBlockReason && (
-                        <p className="mt-0.5 text-sm text-slate-500">
-                          {disconnectBlockReason}
-                        </p>
-                      )}
                     </div>
-
-                    {account.status === "connected" ? (
-                      <LaButton
-                        type="button"
-                        intent="outline"
-                        size="default"
-                        onClick={() => requestDisconnectMethod(account.provider)}
-                        disabled={isDisconnectBlocked}
-                        className="h-10 min-w-32 shrink-0 justify-center border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800 focus-visible:ring-rose-400"
-                      >
-                        Disconnect
-                      </LaButton>
-                    ) : (
-                      <LaButton
-                        type="button"
-                        intent="primary-blue"
-                        size="default"
-                        onClick={() => connectMethod(account.provider)}
-                        className="h-10 min-w-32 shrink-0 justify-center"
-                      >
-                        Connect
-                      </LaButton>
-                    )}
                   </div>
+
+                  <LaButton
+                    type="button"
+                    intent="outline"
+                    size="default"
+                    onClick={() => setDevicePendingRevoke(device)}
+                    disabled={revokingSessionId === device.sessionId}
+                    className="h-10 min-w-32 shrink-0 justify-center border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800 focus-visible:ring-rose-400"
+                  >
+                    {revokingSessionId === device.sessionId ? (
+                      <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                    ) : (
+                      "Sign out"
+                    )}
+                  </LaButton>
                 </div>
-              );
-            })}
+              ))
+            )}
+
+            {devices.filter((d) => !d.isCurrent).length > 0 && (
+              <div className="px-4 py-3.5">
+                <LaButton
+                  type="button"
+                  intent="outline"
+                  size="default"
+                  onClick={() => setRevokeOthersConfirmOpen(true)}
+                  className="w-full justify-center border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800 focus-visible:ring-rose-400"
+                >
+                  Sign out of all other devices
+                </LaButton>
+              </div>
+            )}
           </Section>
           </div>
 
@@ -1040,24 +1032,47 @@ export function ProfilePageScreen({
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Connected account disconnect confirmation */}
-      <AlertDialog open={!!accountPendingDisconnect} onOpenChange={(open) => !open && setAccountPendingDisconnect(null)}>
+      {/* Device sign-out confirmation */}
+      <AlertDialog open={!!devicePendingRevoke} onOpenChange={(open) => !open && setDevicePendingRevoke(null)}>
         <AlertDialogContent size="sm">
           <AlertDialogHeader>
             <AlertDialogMedia>
-              <Trash2 className="size-5 text-rose-500" />
+              <LogOut className="size-5 text-rose-500" />
             </AlertDialogMedia>
             <AlertDialogTitle>
-              Disconnect {accountPendingDisconnect ? providerLabel(accountPendingDisconnect) : "account"}?
+              Sign out {devicePendingRevoke?.isCurrent ? "this device" : devicePendingRevoke?.deviceLabel}?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              You will no longer be able to sign in with this method.
+              {devicePendingRevoke?.isCurrent
+                ? "You'll be signed out here right away and need to sign in again."
+                : "That device will be signed out immediately and will need to sign in again."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction variant="destructive" onClick={confirmDisconnectMethod}>
-              Disconnect
+            <AlertDialogAction variant="destructive" onClick={confirmRevokeDevice}>
+              Sign out
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Sign out of all other devices confirmation */}
+      <AlertDialog open={revokeOthersConfirmOpen} onOpenChange={setRevokeOthersConfirmOpen}>
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogMedia>
+              <LogOut className="size-5 text-rose-500" />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Sign out of all other devices?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Every other device signed in to this account will be signed out immediately. This device stays signed in.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={confirmRevokeOthers} disabled={revokeOthersLoading}>
+              {revokeOthersLoading ? "Signing out…" : "Sign out all"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

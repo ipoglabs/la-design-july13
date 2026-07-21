@@ -66,6 +66,7 @@ export function RoleStep() {
   const method = useOnboardingStore((s) => s.method);
   const identifier = useOnboardingStore((s) => s.identifier);
   const verified = useOnboardingStore((s) => s.verified);
+  const proof = useOnboardingStore((s) => s.proof);
   const fullName = useOnboardingStore((s) => s.fullName);
   const gender = useOnboardingStore((s) => s.gender);
   const dateOfBirthIso = useOnboardingStore((s) => s.dateOfBirthIso);
@@ -173,6 +174,7 @@ export function RoleStep() {
         body: JSON.stringify({
           method,
           identifier,
+          proof,
           fullName,
           gender,
           dateOfBirthIso,
@@ -187,6 +189,11 @@ export function RoleStep() {
       toast.success(`Welcome, ${firstName}! Your account is ready.`);
       reset();
       router.push(searchParams.get("redirect") || "/");
+      // router.push() alone does not re-run the root layout Server Component,
+      // so AppHeader's server-seeded `user` prop would stay stale (logged
+      // out) even though complete-profile already set the session cookie —
+      // force it to re-fetch getSession() (mirrors auth/google-success/page.tsx).
+      router.refresh();
     } catch {
       toast.error("Couldn't finish setting up your account. Please try again.");
     } finally {

@@ -6,6 +6,7 @@ import { getNextUserId } from "@/lib/sequence";
 import { verifyIdentityProof } from "@/lib/auth-proof";
 import { normalizeTarget } from "@/lib/otpUtils";
 import { sendWelcomeEmail } from "@/lib/sendWelcomeEmail";
+import { createUserSession } from "@/lib/userSession";
 import { BASE_ROLE, type RoleId } from "@/config/roles";
 
 const COOKIE_NAME = "session";
@@ -98,11 +99,13 @@ export async function POST(req: Request) {
       }
     }
 
+    const sid = await createUserSession(String(created._id), req);
     const token = signJwt({
       userId: String(created._id),
       email: created.email,
       primaryNumber: created.primaryNumber,
       role: created.role ?? "user",
+      sid,
     });
 
     const res = NextResponse.json({ data: { id: String(created._id) } }, { status: 201 });

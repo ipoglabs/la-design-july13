@@ -40,6 +40,7 @@ export function VerifyStep() {
   const method = useOnboardingStore((s) => s.method);
   const identifier = useOnboardingStore((s) => s.identifier);
   const setVerified = useOnboardingStore((s) => s.setVerified);
+  const setProof = useOnboardingStore((s) => s.setProof);
   const markAccountCreated = useOnboardingStore((s) => s.markAccountCreated);
   const reset = useOnboardingStore((s) => s.reset);
 
@@ -80,7 +81,9 @@ export function VerifyStep() {
     })
       .then(async (res) => {
         if (res.ok) {
+          const { data } = (await res.json()) as { data: { verified: true; proof: string } };
           setVerified(true);
+          setProof(data.proof);
           markAccountCreated();
           router.push(withRedirectParam("/register/details", redirectParam));
           return;
