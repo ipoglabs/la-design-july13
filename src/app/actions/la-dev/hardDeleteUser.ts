@@ -4,7 +4,7 @@ import dbConnect from "@/lib/db";
 import User from "@/models/user";
 
 /**
- * Dev-only permanent delete — see src/app/la-dev/page.tsx.
+ * Permanent delete — Basic-Auth gated, see src/app/la-dev/page.tsx.
  *
  * Unlike the real account-deletion flow (softDeleteAccount in
  * profile/deleteAccount.ts), this actually removes the document from Mongo
@@ -13,9 +13,6 @@ import User from "@/models/user";
  * block re-registering with the same identifier during manual testing.
  */
 export async function hardDeleteUser(id: string): Promise<{ success: boolean; message?: string }> {
-  if (process.env.NODE_ENV === "production") {
-    return { success: false, message: "Not available in production." };
-  }
   if (!id) return { success: false, message: "Missing user id." };
 
   await dbConnect();

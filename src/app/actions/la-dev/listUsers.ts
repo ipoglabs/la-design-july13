@@ -4,10 +4,8 @@ import dbConnect from "@/lib/db";
 import User from "@/models/user";
 import type { LaDevUser } from "./types";
 
-/** Dev-only — all users, newest first. See src/app/la-dev/page.tsx. */
+/** All users, newest first — Basic-Auth gated, see src/app/la-dev/page.tsx. */
 export async function listUsers(): Promise<LaDevUser[]> {
-  if (process.env.NODE_ENV === "production") return [];
-
   await dbConnect();
 
   const users = await User.find({}).sort({ createdAt: -1 });
