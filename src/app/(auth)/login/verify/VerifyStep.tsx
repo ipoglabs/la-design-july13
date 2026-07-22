@@ -15,7 +15,6 @@ import { OtpInput } from "@/components/ui/otp-input";
 import { LaCard } from "@/components/la";
 import { useResendTimer } from "@/lib/hooks/useResendTimer";
 import { maskEmail } from "@/lib/utils";
-import { VALID_OTP } from "@/lib/constants";
 import { useLoginStore } from "@/lib/stores/loginStore";
 import { resolveIdentity } from "../resolveIdentity";
 
@@ -158,9 +157,6 @@ export function VerifyStep() {
             </p>
           )}
         </div>
-
-        {/* Demo hint — remove before production */}
-        <p className="text-sm text-slate-400">Demo code: {VALID_OTP}</p>
     </LaCard>
     </div>
   );

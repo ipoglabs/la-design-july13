@@ -9,14 +9,18 @@
  * method was chosen, or if the chosen method doesn't need verification here
  * (google/apple skip straight to `/register/role`).
  *
- * Calls the real (mocked-behind-the-scenes) verify routes — see
- * `md/api-contracts/auth-register.md`:
- *   phone_otp  → POST /api/auth/phone/verify-otp { phone, otp }
- *   magic_link → POST /api/auth/verify-magic { email, otp }
- * Both currently check against the shared demo VALID_OTP constant
- * server-side (not client-side) — see each route's file header for the
- * real-provider TODO. A network failure (distinct from a wrong code) shows
- * its own message rather than being mistaken for "incorrect code".
+ * Calls the real verify routes — see `md/api-contracts/auth-register.md`:
+ *   phone_otp  → POST /api/auth/phone/verify-otp { phone, otp } — Twilio
+ *                Verify when TWILIO_ACCOUNT_SID/AUTH_TOKEN/VERIFY_SID are
+ *                set (see lib/twilioVerify.ts), except +91 (India) numbers,
+ *                which always use a Mongo-generated mock code regardless of
+ *                Twilio config or environment — see otpService.ts's
+ *                isIndianPhone branch (India needs DLT template registration
+ *                Twilio-side that isn't set up).
+ *   magic_link → POST /api/auth/verify-magic { email, otp } — always a
+ *                real Mongo-generated + emailed code.
+ * A network failure (distinct from a wrong code) shows its own message
+ * rather than being mistaken for "incorrect code".
  */
 
 import { useState, useCallback, useEffect } from "react";
@@ -25,7 +29,6 @@ import { OtpInput } from "@/components/ui/otp-input";
 import { LaCard } from "@/components/la";
 import { useResendTimer } from "@/lib/hooks/useResendTimer";
 import { maskEmail, withRedirectParam } from "@/lib/utils";
-import { VALID_OTP } from "@/lib/constants";
 import { useOnboardingStore } from "@/lib/stores/onboardingStore";
 
 function maskPhone(digits: string): string {
@@ -163,9 +166,6 @@ export function VerifyStep() {
             </p>
           )}
         </div>
-
-        {/* Demo hint — remove before production */}
-        <p className="text-sm text-slate-400">Demo code: {VALID_OTP}</p>
     </LaCard>
     </div>
   );

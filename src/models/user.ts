@@ -155,6 +155,11 @@ deleteFeedback: { type: String, trim: true },
 
  otp: { type: OtpSchema, default: null },
 
+    // Derived, not user-settable — kept in sync by the pre-validate hook
+    // below on every save. True only once email, primaryNumber,
+    // dateOfBirth, and locality are all present.
+    isFullyRegistered: { type: Boolean, default: false },
+
     image: { type: String },
   },
   { timestamps: true }
@@ -168,6 +173,10 @@ UserSchema.pre("validate", function (this: any) {
   if (!this.email && !this.primaryNumber) {
     throw new Error("At least one of email or primaryNumber is required.");
   }
+
+  this.isFullyRegistered = Boolean(
+    this.email && this.primaryNumber && this.dateOfBirth && this.locality
+  );
 });
 
 export default mongoose.models.User || mongoose.model("User", UserSchema);

@@ -13,12 +13,16 @@
  *     just calls NextAuth's `signIn("google")` directly instead of july16's
  *     mock `POST /api/auth/callback/google` + client-side `resolveIdentity()`
  *     — no need to reinvent what already works.
- *   - Apple → no Apple Developer credentials are configured in this
- *     environment yet (no `APPLE_ID`/`APPLE_SECRET` env vars). The button
- *     is shown but surfaces a clear "not configured" message instead of
- *     silently failing or faking a sign-in. Wire a real `AppleProvider` in
- *     `authOptions.ts` once credentials exist, then swap this back to a
- *     `signIn("apple")` call matching Google's pattern above.
+ *   - Apple → same real pattern as Google now: `signIn("apple")` +
+ *     `/api/auth/apple-callback` (matched/no-match against `User`, new
+ *     users go to `/register/apple-complete`) — see authOptions.ts and
+ *     lib/appleClientSecret.ts. Gated behind
+ *     `NEXT_PUBLIC_APPLE_SIGNIN_ENABLED` because none of the 4 Apple
+ *     Developer credentials (`APPLE_ID`/`APPLE_TEAM_ID`/`APPLE_KEY_ID`/
+ *     `APPLE_PRIVATE_KEY`) are configured in this environment yet, and
+ *     Apple doesn't allow localhost redirect URIs at all — flip the flag
+ *     once those exist AND this is deployed to a real HTTPS domain
+ *     registered with Apple.
  *   - Email / Phone → real send routes (`/api/auth/magic-link`,
  *     `/api/auth/phone/send-otp`), backed by the existing `otpService`
  *     (same Mongo-backed OTP records email verification already uses).
@@ -68,6 +72,7 @@ export function MethodStep() {
   );
   const [touched, setTouched] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const [continueLoading, setContinueLoading] = useState(false);
 
   const emailValid = isValidEmail(email);
@@ -86,8 +91,23 @@ export function MethodStep() {
     }
   }
 
-  function handleApple() {
-    toast.error("Apple sign-in isn't set up yet — use Google, email, or phone for now.");
+  async function handleApple() {
+    // Flip NEXT_PUBLIC_APPLE_SIGNIN_ENABLED=true once APPLE_ID/APPLE_TEAM_ID/
+    // APPLE_KEY_ID/APPLE_PRIVATE_KEY are set server-side (see
+    // lib/appleClientSecret.ts) — none of the 5 are configured yet, and
+    // Apple doesn't allow localhost redirect URIs at all, so this can't be
+    // exercised until deployed to a real registered HTTPS domain either way.
+    if (process.env.NEXT_PUBLIC_APPLE_SIGNIN_ENABLED !== "true") {
+      toast.error("Apple sign-in isn't set up yet — use Google, email, or phone for now.");
+      return;
+    }
+    setAppleLoading(true);
+    try {
+      await signIn("apple", { callbackUrl: "/api/auth/apple-callback" });
+    } catch {
+      toast.error("Couldn't connect to Apple. Please try again.");
+      setAppleLoading(false);
+    }
   }
 
   async function handleContinue() {
@@ -105,13 +125,27 @@ export function MethodStep() {
         if (!res.ok) throw new Error("send failed");
         setMethod("magic_link", trimmedEmail);
       } else {
+        // PhoneNumberInput's onChange only ever gives back the local digits
+        // (no dial code) — prepend it here so every downstream consumer
+        // (Twilio Verify, normalizeTarget, the stored identifier itself)
+        // gets a real E.164-ish number, not a bare local number that
+        // happens to work only because send/verify/resolve all reuse the
+        // same un-prefixed string.
+        const fullPhone = `+${country.dial}${phone}`;
         const res = await fetch("/api/auth/phone/send-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone }),
+          body: JSON.stringify({ phone: fullPhone }),
         });
         if (!res.ok) throw new Error("send failed");
-        setMethod("phone_otp", phone);
+        // devCode only comes back for India (mocked — no real SMS provider
+        // wired up for +91 yet, see otpService.ts), so this is the only place
+        // the user can see the code.
+        const data = await res.json().catch(() => ({}));
+        if (data?.devCode) {
+          toast.info(`Demo code (no SMS sent): ${data.devCode}`);
+        }
+        setMethod("phone_otp", fullPhone);
       }
       router.push(`/login/verify${searchParams.get("redirect") ? `?redirect=${encodeURIComponent(redirectTarget)}` : ""}`);
     } catch {
@@ -151,10 +185,11 @@ export function MethodStep() {
             intent="primary"
             size="default"
             className="w-full gap-3"
+            disabled={appleLoading}
             onClick={handleApple}
           >
             <IconApple className="size-5" />
-            Sign in with Apple
+            {appleLoading ? "Connecting…" : "Sign in with Apple"}
           </LaButton>
         </div>
 

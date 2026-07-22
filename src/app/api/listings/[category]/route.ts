@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import dbConnect from "@/lib/db";
-import ListingModel from "@/lib/db/models/Listing";
+import Post from "@/models/post";
 import {
   COUNTRY_CONFIGS,
   getAppStage,
@@ -13,6 +13,8 @@ import {
   isKnownCategory,
   isKnownSubcategory,
 } from "@/lib/mock/country-map";
+import { CATEGORY_LABELS, SUBCATEGORY_LABELS } from "@/lib/category-map";
+import { mapPostToListing, type LeanOwner } from "@/lib/mapPostToListing";
 import type { ListingsApiResponse } from "@/types/listings-api";
 
 const COUNTRY_CODES = Object.keys(COUNTRY_CONFIGS) as CountryCode[];
@@ -62,21 +64,39 @@ export async function GET(
   if (source === "db") {
     await dbConnect();
 
+    // Post.category/subcategory are stored as whatever the post wizard
+    // submitted, which in the sample data seen so far is the display LABEL
+    // ("Vehicles", "Food & Dining") rather than the canonical id this route
+    // receives ("vehicles", "food_dining") — match either so real posts
+    // aren't silently invisible regardless of which convention a given
+    // category's form step actually used.
+    const categoryLabel = CATEGORY_LABELS[category];
     const query: Record<string, unknown> = {
-      countryCode: country,
-      category,
-      status: "live",
+      category: categoryLabel ? { $in: [category, categoryLabel] } : category,
+      // No moderation/approval step exists yet — see getFeaturedListings.ts's
+      // matching comment. Only exclude genuinely hidden/removed states.
+      status: { $nin: ["off", "expired", "deleted"] },
+      // Country-scoped via the real `country` field (models/post.ts). Posts
+      // with none (predating that field, or created without a resolved
+      // cookie) are treated as visible in every market rather than nowhere.
+      $or: [{ country }, { country: { $exists: false } }],
     };
-    if (sub) query.subCategory = sub;
+    if (sub) {
+      const subLabel = SUBCATEGORY_LABELS[category]?.[sub];
+      query.subcategory = subLabel ? { $in: [sub, subLabel] } : sub;
+    }
 
-    const dbItems = await ListingModel.find(query)
+    const dbItems = await Post.find(query)
       .sort({ createdAt: -1 })
       .limit(50)
+      .populate<{ ownerId: LeanOwner | null }>(
+        "ownerId",
+        "fullName image role isEmailVerified isPrimaryNumberVerified createdAt"
+      )
       .lean();
 
-    // TODO [API INTEGRATION]: Map Listing Mongo documents to canonical `Listing` UI shape.
-    // TODO [API INTEGRATION]: Add server-side pagination + metadata contracts.
-    // TODO [API INTEGRATION]: Replace placeholder empty items with mapped DB payload.
+    const items = dbItems.map(({ ownerId, ...post }) => mapPostToListing(post, ownerId ?? null));
+
     const response: ListingsApiResponse = {
       ok: true,
       source,
@@ -84,10 +104,13 @@ export async function GET(
       categoryId: category,
       subCategoryId: sub,
       currency: COUNTRY_CONFIGS[country].currency,
-      total: dbItems.length,
+      total: items.length,
       generatedAt: new Date().toISOString(),
+      // Category filter facets/counts stay mock-derived for now — Post
+      // doesn't cleanly support that faceting yet (see the scoping note in
+      // useListingFilters.ts's consumers).
       countsBySubcategory: getCountsForMarket(category, country),
-      items: [],
+      items,
     };
 
     return NextResponse.json(response);

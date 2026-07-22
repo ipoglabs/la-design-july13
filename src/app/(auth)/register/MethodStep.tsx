@@ -9,8 +9,11 @@
  *   - Google → real `signIn("google")`, staging's existing
  *     `/api/auth/google-callback` already creates new users via
  *     `/register/google-complete`.
- *   - Apple → not configured yet (no credentials); button surfaces a
- *     clear message rather than faking a sign-in.
+ *   - Apple → real `signIn("apple")` + `/api/auth/apple-callback` +
+ *     `/register/apple-complete`, gated behind
+ *     `NEXT_PUBLIC_APPLE_SIGNIN_ENABLED` — no Apple Developer credentials
+ *     exist yet (see lib/appleClientSecret.ts), so the button still shows
+ *     the "not set up" message until that flag is flipped server-side.
  *   - Email / Phone → real `/api/auth/magic-link` / `/api/auth/phone/send-otp`,
  *     backed by the existing Mongo-backed `otpService`.
  */
@@ -65,6 +68,7 @@ export function MethodStep() {
   );
   const [touched, setTouched] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const [continueLoading, setContinueLoading] = useState(false);
 
   const emailValid = isValidEmail(email);
@@ -81,8 +85,18 @@ export function MethodStep() {
     }
   }
 
-  function handleApple() {
-    toast.error("Apple sign-in isn't set up yet — use Google, email, or phone for now.");
+  async function handleApple() {
+    if (process.env.NEXT_PUBLIC_APPLE_SIGNIN_ENABLED !== "true") {
+      toast.error("Apple sign-in isn't set up yet — use Google, email, or phone for now.");
+      return;
+    }
+    setAppleLoading(true);
+    try {
+      await signIn("apple", { callbackUrl: "/api/auth/apple-callback" });
+    } catch {
+      toast.error("Couldn't connect to Apple. Please try again.");
+      setAppleLoading(false);
+    }
   }
 
   async function handleContinue() {
@@ -100,13 +114,27 @@ export function MethodStep() {
         if (!res.ok) throw new Error("send failed");
         setMethod("magic_link", trimmedEmail);
       } else {
+        // PhoneNumberInput's onChange only ever gives back the local digits
+        // (no dial code) — prepend it here so every downstream consumer
+        // (Twilio Verify, normalizeTarget, the stored identifier itself)
+        // gets a real E.164-ish number, not a bare local number that
+        // happens to work only because send/verify/resolve all reuse the
+        // same un-prefixed string.
+        const fullPhone = `+${country.dial}${phone}`;
         const res = await fetch("/api/auth/phone/send-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone }),
+          body: JSON.stringify({ phone: fullPhone }),
         });
         if (!res.ok) throw new Error("send failed");
-        setMethod("phone_otp", phone);
+        // devCode only comes back for India (mocked — no real SMS provider
+        // wired up for +91 yet, see otpService.ts), so this is the only place
+        // the user can see the code.
+        const data = await res.json().catch(() => ({}));
+        if (data?.devCode) {
+          toast.info(`Demo code (no SMS sent): ${data.devCode}`);
+        }
+        setMethod("phone_otp", fullPhone);
       }
       router.push(withRedirectParam("/register/verify", redirectParam));
     } catch {
@@ -149,10 +177,11 @@ export function MethodStep() {
             intent="primary"
             size="default"
             className="w-full gap-3"
+            disabled={appleLoading}
             onClick={handleApple}
           >
             <IconApple className="size-5" />
-            Continue with Apple
+            {appleLoading ? "Connecting…" : "Continue with Apple"}
           </LaButton>
         </div>
 

@@ -15,6 +15,7 @@ import ListingDetailNavBand from "./ListingDetailNavBand";
 import { LaListingDescription } from "@/components/la-blocks/la-listing-description";
 import type { FavItem } from "@/lib/stores/favouritesStore";
 import { resolveListingContext, getSimilarListings } from "@/lib/mock/country-map";
+import { resolvePostListingContext } from "@/app/actions/getPostByAdsId";
 import { getSession } from "@/lib/session";
 import FeaturedListings from "@/components/la-blocks/FeaturedListings";
 import { CATEGORY_LABELS, SUBCATEGORY_LABELS } from "@/lib/category-map";
@@ -31,9 +32,23 @@ interface ListingDetailPageProps {
   params: Promise<{ listingId: string }>;
 }
 
+/**
+ * Real DB post first, mock catalog as fallback — lets real posted ads
+ * (id = adsId, or raw Mongo id) resolve here while every existing mock
+ * listing URL (id = a slug like "sports-in-gym-01", never a real post's id
+ * shape) keeps working unchanged. See resolvePostListingContext's header
+ * for why the two can't be told apart in advance without just trying DB
+ * first — a mock-slug lookup in Post is just a fast, cheap, indexed miss.
+ */
+async function resolveContext(listingId: string) {
+  const fromDb = await resolvePostListingContext(listingId);
+  if (fromDb) return fromDb;
+  return resolveListingContext(listingId);
+}
+
 export async function generateMetadata({ params }: ListingDetailPageProps): Promise<Metadata> {
   const { listingId } = await params;
-  const context = resolveListingContext(listingId);
+  const context = await resolveContext(listingId);
   if (!context) return { title: "Listing Not Found" };
 
   const { listing } = context;
@@ -123,7 +138,7 @@ function BreadcrumbJsonLd({ listing, cat, catLabel }: { listing: Listing; cat: s
 export default async function ListingDetailPage({ params }: ListingDetailPageProps) {
   const { listingId } = await params;
 
-  const context = resolveListingContext(listingId);
+  const context = await resolveContext(listingId);
   if (!context) notFound();
 
   const { listing, cat, sub, market } = context;
@@ -243,7 +258,17 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
 
             {/* ChitChat — mobile only. Hidden on your own listing — a seller
                 shouldn't be able to message themselves. */}
-            {!isOwnListing && <ChitChat className="md:hidden" />}
+            {!isOwnListing && (
+              <ChitChat
+                className="md:hidden"
+                listingId={id}
+                sellerId={seller.id}
+                sellerName={seller.name}
+                adTitle={title}
+                adPrice={price}
+                adImage={images[0]?.src}
+              />
+            )}
 
           </div>
 
@@ -252,7 +277,16 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
 
             <SellerContactGate seller={seller} isOwnListing={isOwnListing} listingId={id} />
 
-            {!isOwnListing && <ChitChat />}
+            {!isOwnListing && (
+              <ChitChat
+                listingId={id}
+                sellerId={seller.id}
+                sellerName={seller.name}
+                adTitle={title}
+                adPrice={price}
+                adImage={images[0]?.src}
+              />
+            )}
 
             <ListingMap location={location} lat={coordinates.lat} lng={coordinates.lng} />
 

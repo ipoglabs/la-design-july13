@@ -365,6 +365,7 @@ function StepFilters({
               placeholder="Select a location"
               showRadius={false}
               trigger="link"
+              searchProvider="google"
               triggerClassName="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
             />
           </div>

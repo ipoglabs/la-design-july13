@@ -58,8 +58,8 @@ const NAV_ITEMS = [
   { label: "My Ads",           icon: LayoutGrid,    href: "/my-ads" },
   { label: "Chat",             icon: MessageCircle, href: "/chat" },
   { label: "Profile",          icon: User,          href: "/profile" },
-  { label: "Donation History", icon: History,       href: "/donation-history" },
   { label: "Account Settings", icon: Settings,      href: "/account-settings" },
+  { label: "Donation History", icon: History,       href: "/donation-history" },
 ] as const;
 
 /* ─── guest menu ─────────────────────────────────────────────── */

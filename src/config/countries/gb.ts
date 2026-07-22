@@ -36,9 +36,9 @@ export const GB_CONFIG: CountryConfig = {
 
   // ── Listings source switch by deployment stage ───────────────────────────
   listingsSourceByStage: {
-    dev: "mock",
-    qa: "mock",
-    staging: "mock",
+    dev: "db",
+    qa: "db",
+    staging: "db",
     prod: "db",
   },
 

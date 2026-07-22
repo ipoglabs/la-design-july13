@@ -184,6 +184,7 @@ function ContextBar({ currentLocation, onLocationChange, activeFilterCount, onOp
             showRadius
             countryScope={config.locationScope}
             radiusUnit={config.radiusUnit}
+            searchProvider="google"
             placeholder="Set location..."
             triggerClassName="text-sm font-medium text-slate-700 hover:text-slate-900 transition-colors"
           />

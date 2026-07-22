@@ -103,7 +103,7 @@ export default function AppFooter({ countryCode, countryLabel, variant = "defaul
             <Link className="flex gap-2 items-center shrink-0" href="/">
               <Image className="size-11" src="/assets/la-logo-symbol-black.svg" alt="lokalads logo" width={44} height={44} />
               <div className="relative">
-                <Image className="w-24" src="/assets/la-text-white.svg" alt="lokalads" width={96} height={24} />
+                <Image className="w-24 h-auto" src="/assets/la-text-white.svg" alt="lokalads" width={96} height={24} />
                 {countryLabel && (
                   <span className="absolute right-0 -bottom-3.5 text-[10px] font-normal text-white whitespace-nowrap subpixel-antialiased">{countryLabel}</span>
                 )}

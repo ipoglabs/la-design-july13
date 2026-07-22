@@ -2,9 +2,9 @@ import type { IPost } from "@/models/post";
 import type { FeaturedListingItem } from "@/components/la-blocks/FeaturedListings";
 import type { ListingStatus } from "@/components/la-blocks/la-thumbnail-listing/LaThumbnailListingCard";
 
-type LeanPost = IPost & { _id: unknown };
+export type LeanPost = IPost & { _id: unknown };
 
-function mapStatus(status?: IPost["status"]): ListingStatus {
+export function mapStatus(status?: IPost["status"]): ListingStatus {
   switch (status) {
     case "off":
       return "off-market";
@@ -23,7 +23,7 @@ function mapStatus(status?: IPost["status"]): ListingStatus {
 // TODO [REVIEW]: this fallback chain guesses which price field applies per
 // category, with no real currency formatting (just a raw "$" prefix).
 // Revisit once a proper per-country currency formatter exists.
-function resolvePrice(post: LeanPost): { priceLabel: string; priceSuffix?: string } {
+export function resolvePrice(post: LeanPost): { priceLabel: string; priceSuffix?: string } {
   if (post.rentPrice != null) return { priceLabel: `$${post.rentPrice}`, priceSuffix: "/ mo" };
   if (post.salePrice != null) return { priceLabel: `$${post.salePrice}` };
   if (post.rent != null) return { priceLabel: `$${post.rent}`, priceSuffix: "/ mo" };
@@ -38,7 +38,7 @@ function resolvePrice(post: LeanPost): { priceLabel: string; priceSuffix?: strin
 
 // TODO [REVIEW]: generic fallback since there's no single "details" field on
 // Post; revisit per-category once category-specific card layouts exist.
-function resolveDetailsLabel(post: LeanPost): string {
+export function resolveDetailsLabel(post: LeanPost): string {
   if (post.beds != null || post.baths != null) {
     return [
       post.beds != null ? `${post.beds} BEDS` : null,
@@ -56,13 +56,23 @@ function resolveDetailsLabel(post: LeanPost): string {
 
 export type { FeaturedListingItem };
 
+/**
+ * Public identifier for a post's URL — its `adsId` when present, else the
+ * raw Mongo id. Uses `||`, not `??`: some legacy posts have `adsId: ""`
+ * (empty string, not null/undefined — see generateAdsId.ts), which `??`
+ * would let through as a broken empty-string URL segment.
+ */
+export function resolvePostId(post: LeanPost): string {
+  return post.adsId || String(post._id);
+}
+
 export function mapPostToFeaturedItem(post: LeanPost): FeaturedListingItem {
-  const id = String(post._id);
+  const id = resolvePostId(post);
   const { priceLabel, priceSuffix } = resolvePrice(post);
 
   return {
     id,
-    href: `/listings/${post.adsId ?? id}`,
+    href: `/listings/${id}`,
     images: (post.images ?? []).map((src) => ({ src })),
     priceLabel,
     priceSuffix,

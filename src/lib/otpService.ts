@@ -2,6 +2,7 @@ import dbConnect from "@/lib/db";
 import Otp from "@/models/Otp";
 import { sendEmail } from "@/lib/email";
 import { normalizeTarget } from "@/lib/otpUtils";
+import { isTwilioConfigured, sendVerificationSms, checkVerificationCode } from "@/lib/twilioVerify";
 
 const OTP_LENGTH = 6;
 const OTP_EXPIRY_MINUTES = 10;
@@ -20,6 +21,22 @@ interface SendOtpArgs {
 }
 
 export async function sendOtpService({ channel, value }: SendOtpArgs) {
+  const isIndianPhone = channel === "phone" && normalizeTarget("phone", value).startsWith("+91");
+
+  // Phone + Twilio configured → Twilio Verify owns code generation/delivery/
+  // expiry entirely; nothing to store in Mongo for this channel. India is
+  // deliberately excluded here (see isIndianPhone below) — real SMS to India
+  // needs DLT template registration Twilio-side that isn't set up, so India
+  // always takes the Mongo-mock path a few lines down instead, in every env.
+  if (channel === "phone" && isTwilioConfigured() && !isIndianPhone) {
+    const target = normalizeTarget("phone", value);
+    if (!/^\+\d{8,15}$/.test(target)) {
+      throw new Error("Enter a valid phone number, including country code.");
+    }
+    await sendVerificationSms(target);
+    return { success: true };
+  }
+
   await dbConnect();
 
   const target = normalizeTarget(channel, value);
@@ -61,12 +78,17 @@ export async function sendOtpService({ channel, value }: SendOtpArgs) {
   }
 
   // ── Phone OTP ──────────────────────────────────────────────────────────
-  // No SMS provider (Twilio/MSG91/etc.) is wired up yet, so this can't
-  // actually text the code to the user. The Otp record above is real and
-  // DB-backed (same as email), so verifyOtpService works correctly end to
-  // end — only the delivery leg is a stand-in. In production this must be
-  // replaced with a real SMS send; until then, surface the code to the
-  // caller so the UI can show it (dev/demo mode only).
+  // India: intentionally mocked in every environment (see isIndianPhone
+  // above) — no real SMS goes out, so the code is always surfaced to the
+  // caller here, production included, otherwise nobody could ever complete
+  // the flow.
+  if (isIndianPhone) {
+    return { success: true, devCode: code };
+  }
+
+  // Everywhere else: this path only runs when Twilio isn't configured at
+  // all, which is a genuine gap rather than a deliberate mock — real SMS
+  // delivery is required in production before phone OTP can be enabled.
   if (process.env.NODE_ENV === "production") {
     throw new Error(
       "SMS delivery isn't configured yet — wire a provider (e.g. Twilio, MSG91) in otpService.ts before enabling phone OTP in production."
@@ -84,6 +106,19 @@ interface VerifyOtpArgs {
 }
 
 export async function verifyOtpService({ channel, value, otp }: VerifyOtpArgs) {
+  const isIndianPhone = channel === "phone" && normalizeTarget("phone", value).startsWith("+91");
+
+  // Mirrors the Twilio branch in sendOtpService — the code was never
+  // stored in Mongo for this channel, so check it against Twilio instead.
+  // India always skips this and falls through to the Mongo-backed check
+  // below, matching the mock send path above.
+  if (channel === "phone" && isTwilioConfigured() && !isIndianPhone) {
+    const target = normalizeTarget("phone", value);
+    const approved = await checkVerificationCode(target, otp.trim());
+    if (!approved) throw new Error("Incorrect code.");
+    return { success: true };
+  }
+
   await dbConnect();
 
   const target = normalizeTarget(channel, value);
